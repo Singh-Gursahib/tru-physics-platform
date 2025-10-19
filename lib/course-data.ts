@@ -130,7 +130,23 @@ export const courses: Course[] = [
               "Explore how centripetal acceleration changes when velocity and radius vary. Test 6 different scenarios (baseline, 2× velocity, ½ radius, 2×v with ½r, 4× velocity, 2× radius) to understand the relationship a_c = v²/r. Visualize a Ferrari on a racetrack with real-time calculations showing how the multiplier effect works.",
             filePath:
               "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-6.1-6.2-6.5-Circular-Motion-and-Gravitation/Simulations/centripetal-acceleration-cases.html",
-            tags: ["circular-motion", "centripetal-acceleration", "velocity-effects", "radius-effects"],
+            tags: ["circular-motion", "centripetal-acceleration", "velocity-effects", "radius-effects", "parametric-analysis"],
+          },
+        ],
+      },
+      {
+        id: "work-and-energy",
+        name: "Ch 7: Work and Energy",
+        description: "Understand the relationship between work, energy, and motion. Explore how forces at different angles affect work done on objects.",
+        simulations: [
+          {
+            id: "work-done-by-forces",
+            title: "Work Done by Different Forces",
+            description:
+              "Compare how different forces perform work on an object with the same displacement. Explore three scenarios: a perpendicular force (10 N), an angled force (8 N @ 60°), and an aligned force (6 N). Use the formula W = F·d·cos(θ) to understand which force does the most work.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-7-Work-and-Energy/Simulations/work-done-by-forces.html",
+            tags: ["work", "energy", "force-angle", "dot-product", "physics-problem-solving"],
           },
         ],
       },

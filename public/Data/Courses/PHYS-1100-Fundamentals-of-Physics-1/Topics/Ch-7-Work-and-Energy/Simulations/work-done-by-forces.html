@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Done by Different Forces</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #e3f2fd, #bbdefb);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            width: 320px;
+            font-size: 14px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .scenario-selector {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .scenario-btn {
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            text-align: left;
+        }
+        
+        .scenario-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .scenario-btn.active {
+            background: #42a5f5;
+            border-color: #42a5f5;
+            box-shadow: 0 0 12px rgba(66, 165, 245, 0.5);
+        }
+        
+        .control-group {
+            margin-bottom: 18px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .slider-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .value-display {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        
+        .info-panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #1565c0;
+            text-transform: uppercase;
+            border-bottom: 1px solid #90caf9;
+            padding-bottom: 4px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            color: #333;
+        }
+        
+        .info-label {
+            font-weight: 500;
+        }
+        
+        .info-value {
+            font-family: 'Courier New', monospace;
+            color: #1565c0;
+            font-weight: 600;
+        }
+        
+        .problem-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #333;
+            border-left: 3px solid #fbc02d;
+        }
+        
+        .problem-box h4 {
+            margin: 0 0 6px 0;
+            color: #f57f17;
+            font-size: 12px;
+        }
+        
+        .answer-option {
+            padding: 6px 8px;
+            margin-top: 4px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #333;
+        }
+        
+        .answer-option.correct {
+            background: #c8e6c9;
+            color: #2e7d32;
+            font-weight: 600;
+            border-left: 2px solid #2e7d32;
+        }
+        
+        .formula-box {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            color: #1b5e20;
+            font-size: 12px;
+        }
+        
+        .formula-box h4 {
+            margin: 0 0 6px 0;
+            color: #388e3c;
+            font-size: 12px;
+        }
+        
+        #canvas {
+            border-radius: 8px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>⚙️ Work Calculator</h2>
+            
+            <div style="font-size: 11px; margin-bottom: 12px; padding: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px;">
+                <strong>Question:</strong> Which force does the most work? All three displacements are the same.
+            </div>
+            
+            <div class="control-group">
+                <label>Select Scenario:</label>
+                <div class="scenario-selector">
+                    <button class="scenario-btn active" onclick="selectScenario('scenario1')">
+                        <strong>Case 1:</strong> 10 N (Perpendicular)
+                    </button>
+                    <button class="scenario-btn" onclick="selectScenario('scenario2')">
+                        <strong>Case 2:</strong> 8 N @ 60°
+                    </button>
+                    <button class="scenario-btn" onclick="selectScenario('scenario3')">
+                        <strong>Case 3:</strong> 6 N (Aligned)
+                    </button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Displacement (m)</label>
+                <div class="slider-container">
+                    <input type="range" id="displacementSlider" min="2" max="10" value="5" step="0.5">
+                    <div class="value-display" id="displacementValue">5.0</div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>📊 Current Scenario</h3>
+                <div class="info-row">
+                    <span class="info-label">Scenario:</span>
+                    <span class="info-value" id="scenarioName">Perpendicular</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Force (F):</span>
+                    <span class="info-value" id="forceValue">10</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Angle (θ):</span>
+                    <span class="info-value" id="angleValue">90°</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Displacement (d):</span>
+                    <span class="info-value" id="dispValue">5.0</span>
+                </div>
+                <hr style="margin: 6px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="info-row">
+                    <span class="info-label">cos(θ):</span>
+                    <span class="info-value" id="cosValue">0</span>
+                </div>
+                <hr style="margin: 6px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="info-row" style="font-weight: bold; font-size: 13px; padding: 6px 0;">
+                    <span class="info-label">Work (W):</span>
+                    <span class="info-value" id="workValue">0.0</span>
+                </div>
+                <div class="info-row" style="font-size: 10px;">
+                    <span>Unit: Joules (J)</span>
+                </div>
+            </div>
+            
+            <div class="problem-box">
+                <h4>🎯 Problem Analysis</h4>
+                <div style="margin-bottom: 6px;">
+                    <strong>All displacements are the same (d)</strong>
+                </div>
+                <div style="margin-bottom: 6px; padding-top: 6px; border-top: 1px solid #ccc;">
+                    <strong>Calculations:</strong>
+                </div>
+                <div>Case 1: W = 10 × d × cos(90°) = <strong>0 J</strong></div>
+                <div>Case 2: W = 8 × d × cos(60°) = <strong>4d J</strong></div>
+                <div class="answer-option correct" style="margin-top: 8px;">
+                    ✓ Case 3: W = 6 × d × cos(0°) = <strong>6d J</strong>
+                </div>
+            </div>
+            
+            <div class="formula-box">
+                <h4 style="color: white;">📐 Work Formula</h4>
+                <div style="font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6;color: white;">
+                    W = F · d · cos(θ)<br>
+                    <br>
+                    <span style="font-size: 11px;color: white;">Where:<br>
+                    F = Force magnitude<br>
+                    d = Displacement<br>
+                    θ = Angle between F and d
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+        let currentScenario = 'scenario1';
+        let displacement = 5.0;
+        let animationTime = 0;
+        let isAnimating = true;
+        
+        const scenarios = {
+            scenario1: {
+                name: 'Perpendicular Force',
+                force: 10,
+                angle: 90,
+                color: [220, 20, 60]
+            },
+            scenario2: {
+                name: '60° Force',
+                force: 8,
+                angle: 60,
+                color: [255, 140, 0]
+            },
+            scenario3: {
+                name: 'Aligned Force',
+                force: 6,
+                angle: 0,
+                color: [34, 139, 34]
+            }
+        };
+        
+        function setup() {
+            createCanvas(800, 600).parent(document.getElementById('canvas-container'));
+            
+            document.getElementById('displacementSlider').addEventListener('input', (e) => {
+                displacement = parseFloat(e.target.value);
+                document.getElementById('displacementValue').textContent = displacement.toFixed(1);
+                updatePhysics();
+            });
+            
+            updatePhysics();
+        }
+        
+        function draw() {
+            background(227, 242, 253);
+            
+            // Title
+            fill(0);
+            noStroke();
+            textSize(20);
+            textAlign(CENTER);
+            text('Work Done by Different Forces', 400, 30);
+            
+            const scenario = scenarios[currentScenario];
+            const angle = radians(scenario.angle);
+            const work = scenario.force * displacement * cos(angle);
+            
+            push();
+            translate(150, 350);
+            
+            // Displacement line (blue, horizontal)
+            stroke(66, 135, 245);
+            strokeWeight(4);
+            line(0, 0, displacement * 30, 0);
+            
+            // Displacement arrow
+            fill(66, 135, 245);
+            noStroke();
+            triangle(displacement * 30, 0, displacement * 30 - 10, -8, displacement * 30 - 10, 8);
+            
+            // Displacement label
+            fill(0);
+            textSize(13);
+            textAlign(CENTER);
+            text('d', displacement * 15, 30);
+            text(displacement.toFixed(1) + ' m', displacement * 15, 50);
+            
+            // Object (block)
+            fill(150, 150, 150);
+            stroke(0);
+            strokeWeight(2);
+            rect(-15, -15, 30, 30);
+            
+            // Force vector
+            let forceLength = scenario.force * 20;
+            let forceX = cos(angle) * forceLength;
+            let forceY = -sin(angle) * forceLength;
+            
+            stroke(scenario.color[0], scenario.color[1], scenario.color[2]);
+            strokeWeight(3);
+            line(0, 0, forceX, forceY);
+            
+            // Force arrow
+            push();
+            translate(forceX, forceY);
+            rotate(angle);
+            fill(scenario.color[0], scenario.color[1], scenario.color[2]);
+            noStroke();
+            triangle(0, 0, -10, -8, -10, 8);
+            pop();
+            
+            // Force label
+            fill(scenario.color[0], scenario.color[1], scenario.color[2]);
+            textSize(13);
+            textAlign(CENTER);
+            text('F = ' + scenario.force + ' N', forceX - 30, forceY - 20);
+            
+            // Angle arc
+            if (scenario.angle > 0 && scenario.angle < 90) {
+                stroke(150, 150, 150);
+                strokeWeight(1);
+                noFill();
+                arc(0, 0, 50, 50, -angle, 0, OPEN);
+                
+                fill(100);
+                textSize(11);
+                text(scenario.angle + '°', 35, -15);
+            }
+            
+            pop();
+            
+            // Right side: Work calculation visualization
+            push();
+            translate(550, 200);
+            
+            // Title
+            fill(0);
+            textSize(14);
+            textAlign(LEFT);
+            textStyle(BOLD);
+            text('Work Calculation:', 0, 0);
+            textStyle(NORMAL);
+            
+            // Formula
+            fill(50);
+            textSize(12);
+            text('W = F × d × cos(θ)', 0, 30);
+            text('W = ' + scenario.force + ' × ' + displacement.toFixed(1) + ' × cos(' + scenario.angle + '°)', 0, 55);
+            text('W = ' + scenario.force + ' × ' + displacement.toFixed(1) + ' × ' + cos(angle).toFixed(2), 0, 80);
+            
+            // Result
+            fill(0, 100, 200);
+            textSize(16);
+            textStyle(BOLD);
+            text('W = ' + work.toFixed(2) + ' J', 0, 120);
+            textStyle(NORMAL);
+            
+            // Work bar visualization
+            let barWidth = abs(work) * 30;
+            let barColor = work >= 0 ? [76, 175, 80] : [244, 67, 54];
+            
+            fill(barColor[0], barColor[1], barColor[2]);
+            stroke(0);
+            strokeWeight(1);
+            rect(0, 150, barWidth, 40);
+            
+            fill(0);
+            textSize(11);
+            text('Work: ' + work.toFixed(2) + ' J', 10, 185);
+            
+            pop();
+            
+            // Comparison panel
+            push();
+            translate(150, 480);
+            
+            fill(0);
+            textSize(13);
+            textStyle(BOLD);
+            text('All Scenarios Comparison (d = ' + displacement.toFixed(1) + ' m):', 0, 0);
+            textStyle(NORMAL);
+            
+            let s1Work = scenarios.scenario1.force * displacement * cos(radians(scenarios.scenario1.angle));
+            let s2Work = scenarios.scenario2.force * displacement * cos(radians(scenarios.scenario2.angle));
+            let s3Work = scenarios.scenario3.force * displacement * cos(radians(scenarios.scenario3.angle));
+            
+            fill(220, 20, 60);
+            textSize(12);
+            text('Case 1 (10N @ 90°): W = ' + s1Work.toFixed(2) + ' J', 0, 25);
+            
+            fill(255, 140, 0);
+            text('Case 2 (8N @ 60°): W = ' + s2Work.toFixed(2) + ' J', 0, 45);
+            
+            fill(34, 139, 34);
+            textSize(12);
+            textStyle(BOLD);
+            text('Case 3 (6N @ 0°): W = ' + s3Work.toFixed(2) + ' J ← MAXIMUM', 0, 65);
+            textStyle(NORMAL);
+            
+            pop();
+        }
+        
+        function updatePhysics() {
+            const scenario = scenarios[currentScenario];
+            const angle = radians(scenario.angle);
+            const work = scenario.force * displacement * cos(angle);
+            
+            document.getElementById('scenarioName').textContent = scenario.name;
+            document.getElementById('forceValue').textContent = scenario.force + ' N';
+            document.getElementById('angleValue').textContent = scenario.angle + '°';
+            document.getElementById('dispValue').textContent = displacement.toFixed(1);
+            document.getElementById('cosValue').textContent = cos(angle).toFixed(2);
+            document.getElementById('workValue').textContent = work.toFixed(2) + ' J';
+        }
+        
+        function selectScenario(scenarioKey) {
+            currentScenario = scenarioKey;
+            
+            document.querySelectorAll('.scenario-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updatePhysics();
+        }
+    </script>
+</body>
+</html>
