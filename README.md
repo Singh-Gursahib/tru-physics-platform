@@ -441,7 +441,3 @@ When adding AI features:
 ## 📄 License
 
 This project is created for Thompson Rivers University Physics Department.
-
----
-
-**Built with v0 by Vercel** | **For TRU Physics Department** | **2025**
