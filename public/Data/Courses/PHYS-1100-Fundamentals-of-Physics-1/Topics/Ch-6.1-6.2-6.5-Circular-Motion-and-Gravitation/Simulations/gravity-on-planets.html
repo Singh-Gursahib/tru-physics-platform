@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity on Different Planets</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #1a1a2e, #16213e);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, #004d40 0%, #00695c 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            width: 300px;
+            font-size: 14px;
+        }
+        
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .planet-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .planet-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+        
+        .planet-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .planet-btn.active {
+            background: #26a69a;
+            border-color: #26a69a;
+            box-shadow: 0 0 12px rgba(38, 166, 154, 0.5);
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .slider-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .value-display {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 60px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        
+        .info-panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #004d40;
+            text-transform: uppercase;
+            border-bottom: 1px solid #b2dfdb;
+            padding-bottom: 4px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            color: #333;
+        }
+        
+        .info-label {
+            font-weight: 500;
+        }
+        
+        .info-value {
+            font-family: 'Courier New', monospace;
+            color: #00695c;
+            font-weight: 600;
+        }
+        
+        .problem-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #333;
+            border-left: 3px solid #0277bd;
+        }
+        
+        .problem-box h4 {
+            margin: 0 0 6px 0;
+            color: #0277bd;
+            font-size: 12px;
+        }
+        
+        .answer-option {
+            padding: 6px 8px;
+            margin-top: 4px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            color: #333;
+        }
+        
+        .answer-option.correct {
+            background: #c8e6c9;
+            color: #2e7d32;
+            font-weight: 600;
+            border-left: 2px solid #2e7d32;
+        }
+        
+        .formula-box {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 12px;
+            color: #004d40;
+            font-size: 12px;
+        }
+        
+        .formula-box h4 {
+            margin: 0 0 6px 0;
+            color: #0277bd;
+            font-size: 12px;
+        }
+        
+        #canvas {
+            border-radius: 8px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>🌍 Gravity Simulator</h2>
+            
+            <div class="planet-selector">
+                <button class="planet-btn active" onclick="selectPlanet('X')">Planet X</button>
+                <button class="planet-btn" onclick="selectPlanet('Y')">Planet Y</button>
+            </div>
+            
+            <div class="control-group">
+                <label>Object Mass (kg)</label>
+                <div class="slider-container">
+                    <input type="range" id="massSlider" min="0.5" max="5" value="2" step="0.5">
+                    <div class="value-display" id="massValue">2.0</div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>📊 Current Planet</h3>
+                <div class="info-row">
+                    <span class="info-label">Planet:</span>
+                    <span class="info-value" id="planetName">X</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Mass (M):</span>
+                    <span class="info-value" id="planetMass">M</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Radius (R):</span>
+                    <span class="info-value" id="planetRadius">R</span>
+                </div>
+                <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="info-row">
+                    <span class="info-label">g (m/s²):</span>
+                    <span class="info-value" id="gValue">8.0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Weight (N):</span>
+                    <span class="info-value" id="weightValue">16.0</span>
+                </div>
+            </div>
+            
+            <div class="problem-box">
+                <h4>🎯 Problem</h4>
+                <div>Planet X: g = 8 m/s²</div>
+                <div style="margin-top: 4px;">Planet Y: 2M, 2R</div>
+                <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ccc;">
+                    <strong>Planet Y's g is:</strong>
+                </div>
+                <div class="answer-option">2 m/s²</div>
+                <div class="answer-option">4 m/s²</div>
+                <div class="answer-option">8 m/s²</div>
+                <div class="answer-option">16 m/s²</div>
+                <div class="answer-option">32 m/s²</div>
+                <div class="answer-option correct" id="answer" style="display: none;">✓ Correct: 4 m/s²</div>
+            </div>
+            
+            <div class="formula-box">
+                <h4 style="color: #e0e0e0;">📐 Formula</h4>
+                <div style="font-family: 'Courier New', monospace; color: #ffffff;">
+                    g = GM/R²
+                </div>
+                <div style="margin-top: 6px; font-size: 11px; line-height: 1.5; color: #ffffff;">
+                    Planet Y: g = G(2M)/(2R)² = 2GM/4R² = <strong>g/2</strong>
+                </div>
+            </div>
+        </div>
+        
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+        let currentPlanet = 'X';
+        let objectMass = 2.0;
+        let dropTime = 0;
+        let isDropping = false;
+        let dropHeight = 0;
+        let animationTime = 0;
+        
+        const planets = {
+            X: {
+                name: 'Planet X',
+                mass: 1,
+                radius: 1,
+                g: 8,
+                color: [100, 150, 200],
+                size: 80
+            },
+            Y: {
+                name: 'Planet Y',
+                mass: 2,
+                radius: 2,
+                g: 2,  // g = G(2M)/(2R)² = 0.5 * GM/R² = 0.5 * 8 = 4
+                color: [200, 120, 80],
+                size: 160
+            }
+        };
+        
+        function setup() {
+            createCanvas(800, 600).parent(document.getElementById('canvas-container'));
+            
+            document.getElementById('massSlider').addEventListener('input', (e) => {
+                objectMass = parseFloat(e.target.value);
+                document.getElementById('massValue').textContent = objectMass.toFixed(1);
+                updatePhysics();
+            });
+            
+            updatePhysics();
+        }
+        
+        function draw() {
+            background(240, 248, 250);
+            
+            // Title
+            fill(0);
+            noStroke();
+            textSize(20);
+            textAlign(CENTER);
+            text('Gravitational Acceleration on Different Planets', 400, 30);
+            
+            const planet = planets[currentPlanet];
+            
+            // Draw planet
+            push();
+            translate(400, 400);
+            
+            // Planet
+            fill(planet.color[0], planet.color[1], planet.color[2]);
+            stroke(0);
+            strokeWeight(2);
+            circle(0, 0, planet.size * 2);
+            
+            // Planet label
+            fill(255);
+            noStroke();
+            textSize(16);
+            textAlign(CENTER);
+            text(`Planet ${currentPlanet}`, 0, 0);
+            
+            pop();
+            
+            // Draw falling object
+            let objX = 400;
+            let objY = 100 + dropHeight * 2; // Scale height for visualization
+            
+            if (!isDropping) {
+                objY = 100;
+                dropTime = 0;
+                dropHeight = 0;
+            } else {
+                // Free fall: h = 0.5 * g * t²
+                dropHeight = 0.5 * planet.g * (dropTime / 60) ** 2;
+                objY = 100 + dropHeight * 2;
+                
+                // Check if object hit planet
+                if (objY >= 380) {
+                    isDropping = false;
+                }
+                dropTime++;
+            }
+            
+            // Draw object
+            fill(255, 100, 100);
+            stroke(200, 50, 50);
+            strokeWeight(2);
+            circle(objX, objY, 20);
+            
+            // Draw velocity arrow
+            if (isDropping) {
+                let velocity = planet.g * (dropTime / 60);
+                let arrowLength = map(velocity, 0, 20, 0, 80);
+                stroke(76, 175, 80);
+                strokeWeight(3);
+                line(objX, objY, objX, objY + arrowLength);
+                drawArrowHead(objX, objY + arrowLength, PI / 2, 8, [76, 175, 80]);
+                
+                fill(76, 175, 80);
+                noStroke();
+                textSize(12);
+                text(`v = ${(velocity).toFixed(1)} m/s`, objX + 50, objY);
+            }
+            
+            // Draw height reference
+            stroke(150, 150, 150);
+            strokeWeight(1);
+            line(350, 100, 350, 380);
+            
+            // Height labels
+            fill(100);
+            noStroke();
+            textSize(11);
+            textAlign(RIGHT);
+            text(`0 m`, 340, 385);
+            text(`150 m`, 340, 105);
+            
+            // Distance fallen
+            if (isDropping) {
+                stroke(244, 67, 54);
+                strokeWeight(2);
+                line(355, 100, 355, objY);
+                fill(244, 67, 54);
+                textAlign(LEFT);
+                textSize(11);
+                text(`Δh = ${dropHeight.toFixed(1)} m`, 365, (100 + objY) / 2);
+            }
+            
+            // Draw comparison info
+            fill(0);
+            noStroke();
+            textSize(13);
+            textAlign(LEFT);
+            let infoX = 50;
+            let infoY = 480;
+            
+            text(`Planet: ${currentPlanet}`, infoX, infoY);
+            text(`g = ${planet.g} m/s²`, infoX, infoY + 25);
+            text(`Mass: ${objectMass} kg`, infoX, infoY + 50);
+            
+            fill(100);
+            textSize(11);
+            text('Click "Drop Object" to see free fall', infoX, infoY + 75);
+            
+            // Control button visualization
+            fill(33, 150, 243);
+            stroke(0, 100, 200);
+            strokeWeight(2);
+            rect(600, 480, 150, 40, 4);
+            fill(255);
+            noStroke();
+            textSize(12);
+            textAlign(CENTER);
+            textStyle(BOLD);
+            text('Drop Object', 675, 505);
+            textStyle(NORMAL);
+        }
+        
+        function drawArrowHead(x, y, angle, size, color) {
+            push();
+            translate(x, y);
+            rotate(angle);
+            fill(color[0], color[1], color[2]);
+            noStroke();
+            triangle(-size / 2, -size / 2, -size / 2, size / 2, size, 0);
+            pop();
+        }
+        
+        function updatePhysics() {
+            const planet = planets[currentPlanet];
+            document.getElementById('planetName').textContent = currentPlanet;
+            document.getElementById('planetMass').textContent = currentPlanet === 'X' ? 'M' : '2M';
+            document.getElementById('planetRadius').textContent = currentPlanet === 'X' ? 'R' : '2R';
+            document.getElementById('gValue').textContent = planet.g.toFixed(1);
+            
+            const weight = objectMass * planet.g;
+            document.getElementById('weightValue').textContent = weight.toFixed(1);
+            
+            if (currentPlanet === 'Y') {
+                document.getElementById('answer').style.display = 'block';
+            } else {
+                document.getElementById('answer').style.display = 'none';
+            }
+        }
+        
+        function selectPlanet(planet) {
+            currentPlanet = planet;
+            isDropping = false;
+            dropTime = 0;
+            dropHeight = 0;
+            
+            document.querySelectorAll('.planet-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updatePhysics();
+        }
+        
+        // Create drop button in HTML
+        window.addEventListener('load', () => {
+            const canvas = document.querySelector('canvas');
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Check if click is on drop button
+                if (x > 600 && x < 750 && y > 480 && y < 520) {
+                    if (!isDropping) {
+                        isDropping = true;
+                        dropTime = 0;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

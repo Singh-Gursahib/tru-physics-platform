@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Net Force vs Friction — Lawn-mower Push & Stop</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #1a5f54;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .description {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        #canvas-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            background: white;
+        }
+        
+        .control-panel {
+            background: #0a4d4a;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+        }
+        
+        .panel-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .value-display {
+            font-weight: 600;
+            color: #a8e6cf;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4db6ac;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        button {
+            background: #4db6ac;
+            color: #0a4d4a;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            background: #80cbc4;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #2c7d7a;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #4db6ac;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(4px);
+            min-width: 220px;
+        }
+        
+        .hud-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            font-weight: 500;
+        }
+        
+        .hud-label {
+            color: #555;
+        }
+        
+        .hud-value {
+            color: #1a5f54;
+            font-weight: 600;
+        }
+        
+        .warning {
+            background: #fff8e1;
+            color: #e65100;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .fbd-toggle {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        @media (max-width: 820px) {
+            #canvas-container {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 4/3;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Net Force vs Friction — Lawn-mower Push & Stop</h1>
+        <p class="description">Simulate a 24-kg lawn mower being pushed with a net force of 51 N against 24 N of friction. Press SPACE or "Remove force" to coast to a stop.</p>
+    </div>
+    
+    <div class="container">
+        <div id="canvas-container"></div>
+        
+        <div class="control-panel">
+            <div class="panel-title">Physics Controls</div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label>
+                        Mass (kg)
+                        <span class="value-display" id="mass-value">24.0</span>
+                    </label>
+                    <input type="range" id="mass-slider" min="1" max="100" step="0.1" value="24">
+                </div>
+                
+                <div class="control-group">
+                    <label>
+                        Net Force (N)
+                        <span class="value-display" id="net-force-value">51.0</span>
+                    </label>
+                    <input type="range" id="net-force-slider" min="0" max="200" step="0.1" value="51">
+                </div>
+                
+                <div class="control-group">
+                    <label>
+                        Friction Force (N)
+                        <span class="value-display" id="friction-value">24.0</span>
+                    </label>
+                    <input type="range" id="friction-slider" min="0" max="100" step="0.1" value="24">
+                </div>
+                
+                <div class="control-group">
+                    <label>
+                        Initial Speed (m/s)
+                        <span class="value-display" id="speed-value">1.5</span>
+                    </label>
+                    <input type="range" id="speed-slider" min="0" max="10" step="0.1" value="1.5">
+                </div>
+            </div>
+            
+            <div class="toggle-container">
+                <div class="toggle-switch">
+                    <input type="checkbox" id="friction-toggle">
+                    <span class="slider"></span>
+                </div>
+                <label for="friction-toggle">Use μ<sub>k</sub> friction model (F<sub>fric</sub> = μ<sub>k</sub>·N)</label>
+            </div>
+            
+            <div class="fbd-toggle">
+                <div class="toggle-container">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="fbd-toggle">
+                        <span class="slider"></span>
+                    </div>
+                    <label for="fbd-toggle">Show Free Body Diagram</label>
+                </div>
+            </div>
+            
+            <div class="warning" id="warning-message"></div>
+            
+            <div class="buttons">
+                <button id="play-pause">Pause</button>
+                <button id="remove-force">Remove Force Now</button>
+                <button id="reset">Reset Simulation</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Physics parameters
+        let m = 24; // mass in kg
+        let F_net = 51; // net force in N
+        let F_fric = 24; // friction force in N
+        let v0 = 1.5; // initial speed for coast phase in m/s
+        const g = 9.81; // gravity in m/s²
+        
+        // Simulation state
+        let isPushing = true;
+        let isPlaying = true;
+        let showFBD = false;
+        let useMuModel = false;
+        let mu_k = 0.1; // default coefficient
+        
+        // Simulation variables
+        let x = 100; // position in pixels (scaled)
+        let v = 0; // velocity in m/s
+        let a = 0; // acceleration in m/s²
+        let F_push = 0; // applied force in N
+        let N = 0; // normal force in N
+        let distance = 0; // total distance traveled in meters
+        let time = 0; // simulation time in seconds
+        let lastTime = 0;
+        let dt = 0; // time step
+        
+        // Canvas and scaling
+        const canvasWidth = 800;
+        const canvasHeight = 600;
+        const groundY = canvasHeight - 100;
+        const scale = 20; // pixels per meter
+        
+        // DOM elements
+        let massSlider, netForceSlider, frictionSlider, speedSlider;
+        let massValue, netForceValue, frictionValue, speedValue;
+        let playPauseBtn, removeForceBtn, resetBtn;
+        let frictionToggle, fbdToggle;
+        let warningMessage;
+        
+        function setup() {
+            const canvas = createCanvas(canvasWidth, canvasHeight);
+            canvas.parent('canvas-container');
+            
+            // Initialize DOM elements
+            massSlider = document.getElementById('mass-slider');
+            netForceSlider = document.getElementById('net-force-slider');
+            frictionSlider = document.getElementById('friction-slider');
+            speedSlider = document.getElementById('speed-slider');
+            
+            massValue = document.getElementById('mass-value');
+            netForceValue = document.getElementById('net-force-value');
+            frictionValue = document.getElementById('friction-value');
+            speedValue = document.getElementById('speed-value');
+            
+            playPauseBtn = document.getElementById('play-pause');
+            removeForceBtn = document.getElementById('remove-force');
+            resetBtn = document.getElementById('reset');
+            
+            frictionToggle = document.getElementById('friction-toggle');
+            fbdToggle = document.getElementById('fbd-toggle');
+            warningMessage = document.getElementById('warning-message');
+            
+            // Set initial values
+            updateSliders();
+            
+            // Event listeners
+            massSlider.addEventListener('input', () => {
+                m = parseFloat(massSlider.value);
+                massValue.textContent = m.toFixed(1);
+                validateParameters();
+            });
+            
+            netForceSlider.addEventListener('input', () => {
+                F_net = parseFloat(netForceSlider.value);
+                netForceValue.textContent = F_net.toFixed(1);
+                validateParameters();
+            });
+            
+            frictionSlider.addEventListener('input', () => {
+                F_fric = parseFloat(frictionSlider.value);
+                frictionValue.textContent = F_fric.toFixed(1);
+                validateParameters();
+            });
+            
+            speedSlider.addEventListener('input', () => {
+                v0 = parseFloat(speedSlider.value);
+                speedValue.textContent = v0.toFixed(1);
+            });
+            
+            playPauseBtn.addEventListener('click', () => {
+                isPlaying = !isPlaying;
+                playPauseBtn.textContent = isPlaying ? 'Pause' : 'Play';
+            });
+            
+            removeForceBtn.addEventListener('click', () => {
+                isPushing = false;
+            });
+            
+            resetBtn.addEventListener('click', () => {
+                resetSimulation();
+            });
+            
+            frictionToggle.addEventListener('change', () => {
+                useMuModel = frictionToggle.checked;
+                if (useMuModel) {
+                    // Calculate mu_k from current friction
+                    mu_k = F_fric / (m * g);
+                    frictionSlider.disabled = true;
+                } else {
+                    frictionSlider.disabled = false;
+                }
+                validateParameters();
+            });
+            
+            fbdToggle.addEventListener('change', () => {
+                showFBD = fbdToggle.checked;
+            });
+            
+            // Initialize simulation
+            resetSimulation();
+        }
+        
+        function resetSimulation() {
+            isPushing = true;
+            x = 100;
+            v = 0;
+            distance = 0;
+            time = 0;
+            lastTime = millis();
+        }
+        
+        function validateParameters() {
+            let warning = '';
+            
+            if (m <= 0) {
+                warning = 'Mass must be greater than zero!';
+            } else if (F_fric < 0) {
+                warning = 'Friction force cannot be negative!';
+            }
+            
+            if (warning) {
+                warningMessage.textContent = warning;
+                warningMessage.style.display = 'block';
+                isPlaying = false;
+                playPauseBtn.textContent = 'Play';
+            } else {
+                warningMessage.style.display = 'none';
+            }
+            
+            // Update forces based on current state
+            updateForces();
+        }
+        
+        function updateForces() {
+            if (useMuModel) {
+                N = m * g;
+                F_fric = mu_k * N;
+                frictionValue.textContent = F_fric.toFixed(1);
+            }
+            
+            if (isPushing) {
+                F_push = F_net + F_fric;
+                a = F_net / m;
+            } else {
+                F_push = 0;
+                a = -F_fric / m;
+            }
+        }
+        
+        function updateSliders() {
+            massSlider.value = m;
+            netForceSlider.value = F_net;
+            frictionSlider.value = F_fric;
+            speedSlider.value = v0;
+            
+            massValue.textContent = m.toFixed(1);
+            netForceValue.textContent = F_net.toFixed(1);
+            frictionValue.textContent = F_fric.toFixed(1);
+            speedValue.textContent = v0.toFixed(1);
+        }
+        
+        function draw() {
+            background(240, 248, 255); // Light blue background
+            
+            // Draw ground
+            fill(139, 195, 74); // Grass green
+            noStroke();
+            rect(0, groundY, width, height - groundY);
+            
+            // Draw ground line
+            stroke(76, 175, 80);
+            strokeWeight(3);
+            line(0, groundY, width, groundY);
+            
+            // Handle time step
+            const currentTime = millis();
+            dt = (currentTime - lastTime) / 1000; // Convert to seconds
+            lastTime = currentTime;
+            
+            // Clamp dt to prevent spikes
+            if (dt > 0.1) dt = 0.1;
+            
+            // Update physics if playing
+            if (isPlaying) {
+                // Update forces
+                updateForces();
+                
+                // Update velocity and position
+                v += a * dt;
+                x += v * scale * dt;
+                distance += Math.abs(v) * dt;
+                time += dt;
+                
+                // Keep mower on screen
+                if (x < 50) x = 50;
+                if (x > width - 50) x = width - 50;
+                
+                // Auto-remove force when coasting starts
+                if (!isPushing && v <= 0) {
+                    v = 0;
+                    a = 0;
+                }
+            }
+            
+            // Draw lawn mower
+            drawLawnMower(x, groundY - 40);
+            
+            // Draw force vectors if FBD is enabled
+            if (showFBD) {
+                drawForceVectors(x, groundY - 40);
+            }
+            
+            // Draw HUD
+            drawHUD();
+            
+            // Draw distance markers
+            drawDistanceMarkers();
+        }
+        
+        function drawLawnMower(x, y) {
+            // Body
+            fill(76, 175, 80);
+            stroke(46, 125, 50);
+            strokeWeight(2);
+            rect(x - 40, y - 20, 80, 40, 8);
+            
+            // Handle
+            stroke(33, 33, 33);
+            strokeWeight(4);
+            line(x, y - 20, x, y - 80);
+            line(x, y - 80, x + 20, y - 100);
+            
+            // Wheels
+            fill(33, 33, 33);
+            ellipse(x - 25, y + 10, 20, 20);
+            ellipse(x + 25, y + 10, 20, 20);
+            
+            // Grass cutting area
+            fill(139, 195, 74, 150);
+            noStroke();
+            rect(x - 35, y, 70, 15);
+        }
+        
+        function drawForceVectors(x, y) {
+            const vectorScale = 0.8; // Scale for visual representation
+            
+            // Push force (to the right)
+            if (F_push > 0) {
+                drawVector(x + 40, y, F_push * vectorScale, 0, color(233, 30, 99), 'F_push');
+            }
+            
+            // Friction force (to the left)
+            if (F_fric > 0) {
+                drawVector(x - 40, y, -F_fric * vectorScale, 0, color(33, 150, 243), 'F_fric');
+            }
+            
+            // Net force (direction depends on net force)
+            if (Math.abs(F_net) > 0.1) {
+                const netDir = F_net > 0 ? 1 : -1;
+                drawVector(x, y - 30, F_net * vectorScale * netDir, 0, color(76, 175, 80), 'F_net');
+            }
+            
+            // Normal force (upward)
+            if (N > 0) {
+                drawVector(x, y + 20, 0, -N * vectorScale * 0.5, color(156, 39, 176), 'N');
+            }
+            
+            // Weight (downward)
+            const weight = m * g;
+            drawVector(x, y + 20, 0, weight * vectorScale * 0.5, color(255, 87, 34), 'mg');
+        }
+        
+        function drawVector(x, y, dx, dy, col, label) {
+            // Cap vector length for visibility
+            const maxLen = 60;
+            const len = Math.sqrt(dx*dx + dy*dy);
+            if (len > maxLen) {
+                dx = (dx / len) * maxLen;
+                dy = (dy / len) * maxLen;
+            }
+            
+            push();
+            stroke(col);
+            strokeWeight(3);
+            fill(col);
+            
+            // Draw arrow shaft
+            line(x, y, x + dx, y + dy);
+            
+            // Draw arrowhead
+            const angle = atan2(dy, dx);
+            const headSize = 10;
+            line(x + dx, y + dy, 
+                 x + dx - headSize * cos(angle - PI/6), 
+                 y + dy - headSize * sin(angle - PI/6));
+            line(x + dx, y + dy, 
+                 x + dx - headSize * cos(angle + PI/6), 
+                 y + dy - headSize * sin(angle + PI/6));
+            
+            // Draw label
+            noStroke();
+            fill(33, 33, 33);
+            textAlign(CENTER, CENTER);
+            textSize(12);
+            text(label, x + dx/2, y + dy/2 - 12);
+            pop();
+        }
+        
+        function drawHUD() {
+            // Calculate stopping distance if coasting
+            let stoppingDistance = 0;
+            if (!isPushing && v > 0) {
+                const a_coast = F_fric / m;
+                stoppingDistance = (v * v) / (2 * a_coast);
+            }
+            
+            // HUD content
+            const hudContent = [
+                `F_push: ${F_push.toFixed(1)} N`,
+                `F_fric: ${F_fric.toFixed(1)} N`,
+                `F_net: ${isPushing ? F_net.toFixed(1) : '0.0'} N`,
+                `a: ${a.toFixed(2)} m/s²`,
+                `v: ${v.toFixed(2)} m/s`,
+                `x: ${(distance).toFixed(2)} m`,
+                `Time: ${time.toFixed(1)} s`
+            ];
+            
+            if (!isPushing && v > 0) {
+                hudContent.push(`Stop dist: ${stoppingDistance.toFixed(2)} m`);
+            }
+            
+            // Draw HUD background
+            push();
+            fill(255, 255, 255, 200);
+            stroke(178, 235, 242);
+            strokeWeight(1);
+            rect(15, 15, 230, hudContent.length * 22 + 20, 10);
+            
+            // Draw HUD text
+            fill(33, 33, 33);
+            textAlign(LEFT);
+            textSize(14);
+            for (let i = 0; i < hudContent.length; i++) {
+                text(hudContent[i], 25, 35 + i * 22);
+            }
+            pop();
+        }
+        
+        function drawDistanceMarkers() {
+            // Draw distance markers on the ground
+            stroke(76, 175, 80, 100);
+            strokeWeight(1);
+            for (let i = 0; i <= 40; i++) {
+                const markerX = 50 + i * scale;
+                if (markerX > width - 50) break;
+                line(markerX, groundY, markerX, groundY - 10);
+                if (i % 5 === 0) {
+                    fill(76, 175, 80);
+                    textAlign(CENTER);
+                    textSize(12);
+                    text(i + 'm', markerX, groundY + 20);
+                }
+            }
+        }
+        
+        function keyPressed() {
+            if (key === ' ') {
+                // Spacebar to remove force
+                isPushing = false;
+                return false; // Prevent scrolling
+            }
+            
+            if (keyCode === LEFT_ARROW) {
+                // Temporary override: apply negative force
+                F_push = -Math.abs(F_net + F_fric);
+                isPushing = true;
+            }
+            
+            if (keyCode === RIGHT_ARROW) {
+                // Temporary override: apply positive force
+                F_push = Math.abs(F_net + F_fric);
+                isPushing = true;
+            }
+        }
+        
+        function keyReleased() {
+            if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW) {
+                // Revert to normal force when key released
+                F_push = F_net + F_fric;
+            }
+        }
+    </script>
+</body>
+</html>

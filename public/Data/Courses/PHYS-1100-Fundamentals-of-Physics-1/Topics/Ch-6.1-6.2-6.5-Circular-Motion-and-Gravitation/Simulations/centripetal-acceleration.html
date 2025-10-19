@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centripetal Acceleration Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #e0f2f1, #b2dfdb);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, #004d40 0%, #00695c 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            width: 280px;
+            font-size: 14px;
+        }
+        
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .slider-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .value-display {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        
+        .info-panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #004d40;
+            text-transform: uppercase;
+            border-bottom: 1px solid #b2dfdb;
+            padding-bottom: 4px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            color: #333;
+        }
+        
+        .info-label {
+            font-weight: 500;
+        }
+        
+        .info-value {
+            font-family: 'Courier New', monospace;
+            color: #00695c;
+            font-weight: 600;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        button.active {
+            background: #26a69a;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        #canvas {
+            border-radius: 8px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>⚙️ Controls</h2>
+            
+            <div class="control-group">
+                <label>Speed (m/s)</label>
+                <div class="slider-container">
+                    <input type="range" id="speedSlider" min="5" max="40" value="25" step="0.5">
+                    <div class="value-display" id="speedValue">25.0</div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Radius (m)</label>
+                <div class="slider-container">
+                    <input type="range" id="radiusSlider" min="100" max="800" value="500" step="50">
+                    <div class="value-display" id="radiusValue">500</div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button id="pauseBtn" onclick="toggleAnimation()">⏸ Pause</button>
+                <button id="resetBtn" onclick="resetSimulation()">↻ Reset</button>
+            </div>
+            
+            <div class="info-panel">
+                <h3>📊 Physics Values</h3>
+                <div class="info-row">
+                    <span class="info-label">Centripetal Acc:</span>
+                    <span class="info-value" id="accelValue">1.25</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" style="font-size: 11px;">Unit: m/s²</span>
+                </div>
+                <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="info-row">
+                    <span class="info-label">Speed:</span>
+                    <span class="info-value" id="infoSpeed">25.0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" style="font-size: 11px;">Unit: m/s</span>
+                </div>
+                <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="info-row">
+                    <span class="info-label">Radius:</span>
+                    <span class="info-value" id="infoRadius">500</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" style="font-size: 11px;">Unit: m</span>
+                </div>
+                <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="info-row">
+                    <span class="info-label">Period:</span>
+                    <span class="info-value" id="infoPeriod">125.7</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" style="font-size: 11px;">Unit: s</span>
+                </div>
+            </div>
+            
+            <div class="info-panel" style="margin-top: 15px; background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); color: #004d40;">
+                <h3 style="color: #0277bd;">📐 Formula</h3>
+                <div style="font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; color: #ffffff;">
+                    a<sub>c</sub> = v²/r<br>
+                    or<br>
+                    a<sub>c</sub> = ω²r<br>
+                    or<br>
+                    a<sub>c</sub> = v·ω
+                </div>
+            </div>
+        </div>
+        
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+        let speed = 25.0;          // m/s
+        let radius = 500;          // m
+        let carAngle = 0;
+        let isAnimating = true;
+        let scaleFactor = 0.5;     // pixels per meter (for visualization)
+        
+        // Canvas dimensions
+        let canvasWidth = 800;
+        let canvasHeight = 600;
+        
+        function setup() {
+            createCanvas(canvasWidth, canvasHeight).parent(document.getElementById('canvas-container'));
+            
+            // Event listeners
+            document.getElementById('speedSlider').addEventListener('input', (e) => {
+                speed = parseFloat(e.target.value);
+                document.getElementById('speedValue').textContent = speed.toFixed(1);
+                document.getElementById('infoSpeed').textContent = speed.toFixed(1);
+                updatePhysicsValues();
+            });
+            
+            document.getElementById('radiusSlider').addEventListener('input', (e) => {
+                radius = parseInt(e.target.value);
+                document.getElementById('radiusValue').textContent = radius;
+                document.getElementById('infoRadius').textContent = radius;
+                updatePhysicsValues();
+            });
+            
+            updatePhysicsValues();
+        }
+        
+        function draw() {
+            background(240, 248, 250);
+            
+            // Draw title
+            fill(0);
+            noStroke();
+            textSize(18);
+            textAlign(CENTER);
+            text('Circular Motion: Centripetal Acceleration', canvasWidth / 2, 30);
+            
+            push();
+            translate(canvasWidth / 2, canvasHeight / 2);
+            
+            // Draw circular path
+            noFill();
+            stroke(100, 150, 150);
+            strokeWeight(2);
+            ellipse(0, 0, radius * scaleFactor * 2, radius * scaleFactor * 2);
+            
+            // Draw radial grid
+            stroke(180, 210, 210);
+            strokeWeight(1);
+            for (let angle = 0; angle < TWO_PI; angle += PI / 4) {
+                let x = cos(angle) * radius * scaleFactor;
+                let y = sin(angle) * radius * scaleFactor;
+                line(0, 0, x, y);
+            }
+            
+            // Update car position if animating
+            if (isAnimating) {
+                // Angular velocity: ω = v / r
+                let angularVelocity = speed / radius;
+                carAngle += angularVelocity * 0.016; // Assuming ~60fps, 0.016 ≈ 1/60
+                if (carAngle > TWO_PI) carAngle -= TWO_PI;
+            }
+            
+            // Draw car
+            let carX = cos(carAngle) * radius * scaleFactor;
+            let carY = sin(carAngle) * radius * scaleFactor;
+            
+            // Car body (simplified rectangle)
+            push();
+            translate(carX, carY);
+            rotate(carAngle + PI / 2);
+            fill(244, 67, 54);
+            stroke(200, 30, 30);
+            strokeWeight(2);
+            rect(-12, -20, 24, 40, 6);
+            
+            // Car wheels
+            fill(50);
+            circle(-8, -18, 8);
+            circle(8, -18, 8);
+            pop();
+            
+            // Draw velocity vector (tangent to circle)
+            let velocityLength = map(speed, 5, 40, 20, 100);
+            let velocityAngle = carAngle + PI / 2; // Tangent to circle
+            let velocityX = cos(velocityAngle) * velocityLength;
+            let velocityY = sin(velocityAngle) * velocityLength;
+            
+            stroke(33, 150, 243);
+            strokeWeight(3);
+            line(carX, carY, carX + velocityX, carY + velocityY);
+            // Arrow head
+            drawArrowHead(carX + velocityX, carY + velocityY, velocityAngle, 8, [33, 150, 243]);
+            
+            // Label velocity
+            fill(33, 150, 243);
+            noStroke();
+            textSize(12);
+            textAlign(CENTER);
+            let labelOffsetX = cos(velocityAngle) * (velocityLength + 20);
+            let labelOffsetY = sin(velocityAngle) * (velocityLength + 20);
+            text('v', carX + labelOffsetX, carY + labelOffsetY - 5);
+            
+            // Draw centripetal acceleration vector (toward center)
+            let centripetalAccel = (speed * speed) / radius;
+            let accelLength = map(centripetalAccel, 0, 2, 0, 80);
+            let accelAngle = carAngle + PI; // Toward center
+            let accelX = cos(accelAngle) * accelLength;
+            let accelY = sin(accelAngle) * accelLength;
+            
+            stroke(76, 175, 80);
+            strokeWeight(3);
+            line(carX, carY, carX + accelX, carY + accelY);
+            // Arrow head
+            drawArrowHead(carX + accelX, carY + accelY, accelAngle, 8, [76, 175, 80]);
+            
+            // Label acceleration
+            fill(76, 175, 80);
+            noStroke();
+            textSize(12);
+            textAlign(CENTER);
+            let accelLabelOffsetX = cos(accelAngle) * (accelLength + 20);
+            let accelLabelOffsetY = sin(accelAngle) * (accelLength + 20);
+            text('a_c', carX + accelLabelOffsetX, carY + accelLabelOffsetY - 5);
+            
+            // Draw radius line
+            stroke(160, 120, 160);
+            strokeWeight(2);
+            line(0, 0, carX, carY);
+            fill(160, 120, 160);
+            noStroke();
+            textSize(11);
+            textAlign(CENTER);
+            let radiusLabelX = carX * 0.4;
+            let radiusLabelY = carY * 0.4;
+            text('r', radiusLabelX - 15, radiusLabelY);
+            
+            // Draw center point
+            fill(0);
+            circle(0, 0, 6);
+            
+            pop();
+            
+            // Draw instructions
+            fill(100);
+            noStroke();
+            textSize(12);
+            textAlign(CENTER);
+            text('Use sliders to adjust speed and radius', canvasWidth / 2, canvasHeight - 15);
+            text('Green arrow shows centripetal acceleration toward center', canvasWidth / 2, canvasHeight - 30);
+        }
+        
+        function drawArrowHead(x, y, angle, size, color) {
+            push();
+            translate(x, y);
+            rotate(angle);
+            fill(color[0], color[1], color[2]);
+            noStroke();
+            triangle(-size / 2, -size / 2, -size / 2, size / 2, size, 0);
+            pop();
+        }
+        
+        function updatePhysicsValues() {
+            // Calculate centripetal acceleration: a = v²/r
+            let centripetalAccel = (speed * speed) / radius;
+            document.getElementById('accelValue').textContent = centripetalAccel.toFixed(3);
+            
+            // Calculate period: T = 2πr / v
+            let period = (2 * PI * radius) / speed;
+            document.getElementById('infoPeriod').textContent = period.toFixed(1);
+        }
+        
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            document.getElementById('pauseBtn').textContent = isAnimating ? '⏸ Pause' : '▶ Play';
+            document.getElementById('pauseBtn').classList.toggle('active', !isAnimating);
+        }
+        
+        function resetSimulation() {
+            carAngle = 0;
+            isAnimating = true;
+            document.getElementById('pauseBtn').textContent = '⏸ Pause';
+            document.getElementById('pauseBtn').classList.remove('active');
+        }
+        
+        // Handle window resize
+        function windowResized() {
+            // Keep canvas size fixed
+        }
+    </script>
+</body>
+</html>

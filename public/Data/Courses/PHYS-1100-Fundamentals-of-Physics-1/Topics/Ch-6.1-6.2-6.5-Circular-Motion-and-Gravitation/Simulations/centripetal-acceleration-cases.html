@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centripetal Acceleration: Velocity and Radius Effects</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #e0f2f1, #b2dfdb);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, #004d40 0%, #00695c 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            width: 320px;
+            font-size: 14px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .case-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .case-btn {
+            padding: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            text-align: center;
+        }
+        
+        .case-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .case-btn.active {
+            background: #26a69a;
+            border-color: #26a69a;
+            box-shadow: 0 0 12px rgba(38, 166, 154, 0.5);
+        }
+        
+        .control-group {
+            margin-bottom: 18px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .slider-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .value-display {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 11px;
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+        
+        .info-panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            color: #004d40;
+            text-transform: uppercase;
+            border-bottom: 1px solid #b2dfdb;
+            padding-bottom: 4px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            color: #333;
+        }
+        
+        .info-label {
+            font-weight: 500;
+        }
+        
+        .info-value {
+            font-family: 'Courier New', monospace;
+            color: #00695c;
+            font-weight: 600;
+        }
+        
+        .comparison-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #333;
+        }
+        
+        .comparison-panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            color: #0277bd;
+            text-transform: uppercase;
+            border-bottom: 1px solid #81d4fa;
+            padding-bottom: 4px;
+        }
+        
+        .comparison-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .comparison-row:last-child {
+            border-bottom: none;
+        }
+        
+        .comparison-label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .comparison-value {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #d32f2f;
+        }
+        
+        .multiplier {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #f57f17;
+        }
+        
+        #canvas {
+            border-radius: 8px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>🏎️ Centripetal Acceleration</h2>
+            
+            <div style="font-size: 11px; margin-bottom: 12px; padding: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px;">
+                <strong>Question:</strong> What happens to centripetal acceleration when velocity is doubled and radius is halved?
+            </div>
+            
+            <div class="control-group">
+                <label>Test Cases:</label>
+                <div class="case-selector">
+                    <button class="case-btn active" onclick="selectCase('baseline')">Baseline</button>
+                    <button class="case-btn" onclick="selectCase('2v')">2× Velocity</button>
+                    <button class="case-btn" onclick="selectCase('halfr')">½ Radius</button>
+                    <button class="case-btn" onclick="selectCase('2v-halfr')">2×v, ½r</button>
+                    <button class="case-btn" onclick="selectCase('4v')">4× Velocity</button>
+                    <button class="case-btn" onclick="selectCase('2r')">2× Radius</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Base Velocity (m/s)</label>
+                <div class="slider-container">
+                    <input type="range" id="velocitySlider" min="10" max="40" value="20" step="2">
+                    <div class="value-display" id="velocityValue">20</div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Base Radius (m)</label>
+                <div class="slider-container">
+                    <input type="range" id="radiusSlider" min="100" max="400" value="200" step="50">
+                    <div class="value-display" id="radiusValue">200</div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>📊 Current Parameters</h3>
+                <div class="info-row">
+                    <span class="info-label">Case:</span>
+                    <span class="info-value" id="caseName">Baseline</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Velocity:</span>
+                    <span class="info-value" id="currentVel">20</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" style="font-size: 10px;">Unit: m/s</span>
+                </div>
+                <hr style="margin: 6px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="info-row">
+                    <span class="info-label">Radius:</span>
+                    <span class="info-value" id="currentRad">200</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" style="font-size: 10px;">Unit: m</span>
+                </div>
+                <hr style="margin: 6px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="info-row">
+                    <span class="info-label">a<sub>c</sub>:</span>
+                    <span class="info-value" id="accelCurrent">2.0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" style="font-size: 10px;">Unit: m/s²</span>
+                </div>
+            </div>
+            
+            <div class="comparison-panel">
+                <h3>🔄 vs Baseline</h3>
+                <div class="comparison-row">
+                    <span class="comparison-label">Baseline a<sub>c</sub>:</span>
+                    <span class="comparison-value" id="baselineAccel">2.0</span>
+                </div>
+                <div class="comparison-row">
+                    <span class="comparison-label">Case a<sub>c</sub>:</span>
+                    <span class="comparison-value" id="caseAccel">2.0</span>
+                </div>
+                <div class="comparison-row" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e0e0e0;">
+                    <span class="comparison-label"><strong>Multiplier:</strong></span>
+                    <span class="multiplier" id="multiplierValue">1.0×</span>
+                </div>
+            </div>
+            
+            <div class="info-panel" style="background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); color: #004d40; margin-bottom: 0;">
+                <h3 style="color: #ffffff;">📐 Formula</h3>
+                <div style="font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.6;color: #ffffff;">
+                    a<sub>c</sub> = v²/r<br>
+                    <br>
+                    <span style="font-size: 10px;color: #ffffff;">When v→2v, r→r/2:</span><br>
+                    <span style="font-size: 10px; color: #ffffff;">a<sub>c</sub> = (2v)²/(r/2)</span><br>
+                    <span style="font-size: 10px;color: #ffffff;">a<sub>c</sub> = 4v² × (2/r)</span><br>
+                    <span style="font-size: 10px;color: #ffffff;">a<sub>c</sub> = <strong>8 × (v²/r)</strong></span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+        let baseVelocity = 20;
+        let baseRadius = 200;
+        let currentCase = 'baseline';
+        let carAngle = 0;
+        let scaleFactor = 0.5;
+        
+        const cases = {
+            baseline: { label: 'Baseline', velMultiplier: 1, radMultiplier: 1 },
+            '2v': { label: '2× Velocity', velMultiplier: 2, radMultiplier: 1 },
+            halfr: { label: '½ Radius', velMultiplier: 1, radMultiplier: 0.5 },
+            '2v-halfr': { label: '2×v, ½r', velMultiplier: 2, radMultiplier: 0.5 },
+            '4v': { label: '4× Velocity', velMultiplier: 4, radMultiplier: 1 },
+            '2r': { label: '2× Radius', velMultiplier: 1, radMultiplier: 2 }
+        };
+        
+        function setup() {
+            createCanvas(800, 600).parent(document.getElementById('canvas-container'));
+            
+            document.getElementById('velocitySlider').addEventListener('input', (e) => {
+                baseVelocity = parseFloat(e.target.value);
+                document.getElementById('velocityValue').textContent = baseVelocity.toFixed(0);
+                updatePhysics();
+            });
+            
+            document.getElementById('radiusSlider').addEventListener('input', (e) => {
+                baseRadius = parseFloat(e.target.value);
+                document.getElementById('radiusValue').textContent = baseRadius.toFixed(0);
+                updatePhysics();
+            });
+            
+            updatePhysics();
+        }
+        
+        function draw() {
+            background(240, 248, 250);
+            
+            // Title
+            fill(0);
+            noStroke();
+            textSize(18);
+            textAlign(CENTER);
+            text('Ferrari: Circular Motion - Centripetal Acceleration', 400, 30);
+            
+            const caseData = cases[currentCase];
+            const velocity = baseVelocity * caseData.velMultiplier;
+            const radius = baseRadius * caseData.radMultiplier;
+            
+            push();
+            translate(400, 350);
+            
+            // Draw circular track
+            noFill();
+            stroke(100, 150, 150);
+            strokeWeight(3);
+            ellipse(0, 0, radius * scaleFactor * 2, radius * scaleFactor * 2);
+            
+            // Draw track markings
+            stroke(180, 210, 210);
+            strokeWeight(1);
+            for (let angle = 0; angle < TWO_PI; angle += PI / 8) {
+                let x = cos(angle) * radius * scaleFactor;
+                let y = sin(angle) * radius * scaleFactor;
+                line(0, 0, x, y);
+            }
+            
+            // Update car position
+            let angularVelocity = velocity / radius;
+            carAngle += angularVelocity * 0.016;
+            if (carAngle > TWO_PI) carAngle -= TWO_PI;
+            
+            // Car position
+            let carX = cos(carAngle) * radius * scaleFactor;
+            let carY = sin(carAngle) * radius * scaleFactor;
+            
+            // Draw Ferrari
+            push();
+            translate(carX, carY);
+            rotate(carAngle + PI / 2);
+            
+            // Body
+            fill(220, 20, 60);
+            stroke(180, 0, 0);
+            strokeWeight(2);
+            rect(-14, -24, 28, 48, 8);
+            
+            // Windows
+            fill(100, 150, 200);
+            rect(-10, -18, 20, 10, 2);
+            
+            // Wheels
+            fill(40);
+            circle(-8, -20, 10);
+            circle(8, -20, 10);
+            circle(-8, 20, 10);
+            circle(8, 20, 10);
+            
+            pop();
+            
+            // Draw velocity vector
+            let velocityLength = map(velocity, 10, 80, 20, 100);
+            let velocityAngle = carAngle + PI / 2;
+            let velX = cos(velocityAngle) * velocityLength;
+            let velY = sin(velocityAngle) * velocityLength;
+            
+            stroke(33, 150, 243);
+            strokeWeight(3);
+            line(carX, carY, carX + velX, carY + velY);
+            drawArrowHead(carX + velX, carY + velY, velocityAngle, 8, [33, 150, 243]);
+            
+            fill(33, 150, 243);
+            noStroke();
+            textSize(12);
+            textAlign(CENTER);
+            text('v', carX + cos(velocityAngle) * (velocityLength + 20), carY + sin(velocityAngle) * (velocityLength + 20) - 5);
+            
+            // Draw centripetal acceleration
+            let centripetalAccel = (velocity * velocity) / radius;
+            let accelLength = map(centripetalAccel, 0, 8, 0, 100);
+            let accelAngle = carAngle + PI;
+            let accelX = cos(accelAngle) * accelLength;
+            let accelY = sin(accelAngle) * accelLength;
+            
+            stroke(76, 175, 80);
+            strokeWeight(3);
+            line(carX, carY, carX + accelX, carY + accelY);
+            drawArrowHead(carX + accelX, carY + accelY, accelAngle, 8, [76, 175, 80]);
+            
+            fill(76, 175, 80);
+            noStroke();
+            textSize(12);
+            textAlign(CENTER);
+            text('a_c', carX + cos(accelAngle) * (accelLength + 20), carY + sin(accelAngle) * (accelLength + 20) - 5);
+            
+            // Draw radius line
+            stroke(160, 120, 160);
+            strokeWeight(2);
+            line(0, 0, carX, carY);
+            
+            // Radius label
+            fill(160, 120, 160);
+            noStroke();
+            textSize(11);
+            textAlign(CENTER);
+            text('r', carX * 0.4 - 15, carY * 0.4);
+            
+            // Center point
+            fill(0);
+            circle(0, 0, 6);
+            
+            pop();
+            
+            // Display info at bottom
+            fill(0);
+            noStroke();
+            textSize(13);
+            textAlign(LEFT);
+            text(`Case: ${caseData.label}`, 40, 520);
+            text(`Velocity: ${velocity.toFixed(1)} m/s`, 40, 545);
+            text(`Radius: ${radius.toFixed(0)} m`, 40, 570);
+            
+            // Multiplier indicator
+            let baselineAccel = (baseVelocity * baseVelocity) / baseRadius;
+            let multiplier = centripetalAccel / baselineAccel;
+            
+            fill(244, 67, 54);
+            textSize(14);
+            textStyle(BOLD);
+            text(`Multiplier: ${multiplier.toFixed(1)}×`, 350, 545);
+            textStyle(NORMAL);
+        }
+        
+        function drawArrowHead(x, y, angle, size, color) {
+            push();
+            translate(x, y);
+            rotate(angle);
+            fill(color[0], color[1], color[2]);
+            noStroke();
+            triangle(-size / 2, -size / 2, -size / 2, size / 2, size, 0);
+            pop();
+        }
+        
+        function updatePhysics() {
+            const caseData = cases[currentCase];
+            const velocity = baseVelocity * caseData.velMultiplier;
+            const radius = baseRadius * caseData.radMultiplier;
+            
+            const baselineAccel = (baseVelocity * baseVelocity) / baseRadius;
+            const currentAccel = (velocity * velocity) / radius;
+            const multiplier = currentAccel / baselineAccel;
+            
+            document.getElementById('caseName').textContent = caseData.label;
+            document.getElementById('currentVel').textContent = velocity.toFixed(1);
+            document.getElementById('currentRad').textContent = radius.toFixed(0);
+            document.getElementById('accelCurrent').textContent = currentAccel.toFixed(3);
+            document.getElementById('baselineAccel').textContent = baselineAccel.toFixed(3);
+            document.getElementById('caseAccel').textContent = currentAccel.toFixed(3);
+            document.getElementById('multiplierValue').textContent = multiplier.toFixed(1) + '×';
+        }
+        
+        function selectCase(caseKey) {
+            currentCase = caseKey;
+            
+            document.querySelectorAll('.case-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updatePhysics();
+        }
+    </script>
+</body>
+</html>

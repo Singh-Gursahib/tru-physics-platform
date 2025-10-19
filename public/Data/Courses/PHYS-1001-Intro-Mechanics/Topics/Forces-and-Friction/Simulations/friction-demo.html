@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friction and Force Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #e3f2fd, #bbdefb);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        let box;
+        let appliedForce = 0;
+        let friction = 0.15;
+        let maxForce = 10;
+        
+        function setup() {
+            createCanvas(800, 600).parent(document.body);
+            box = {
+                x: width / 2,
+                y: height / 2 + 50,
+                width: 80,
+                height: 60,
+                vx: 0,
+                mass: 5
+            };
+        }
+        
+        function draw() {
+            background(227, 242, 253);
+            
+            // Draw surface
+            fill(158, 158, 158);
+            noStroke();
+            rect(0, height / 2 + 100, width, 20);
+            
+            // Draw surface texture
+            stroke(120, 120, 120);
+            strokeWeight(2);
+            for (let i = 0; i < width; i += 20) {
+                line(i, height / 2 + 100, i + 10, height / 2 + 120);
+            }
+            
+            // Calculate forces
+            let frictionForce = -box.vx * friction * box.mass;
+            let netForce = appliedForce + frictionForce;
+            let acceleration = netForce / box.mass;
+            
+            // Update box physics
+            box.vx += acceleration;
+            box.x += box.vx;
+            
+            // Keep box on screen
+            if (box.x < box.width / 2) {
+                box.x = box.width / 2;
+                box.vx = 0;
+            }
+            if (box.x > width - box.width / 2) {
+                box.x = width - box.width / 2;
+                box.vx = 0;
+            }
+            
+            // Draw box
+            fill(0, 150, 136);
+            stroke(0, 121, 107);
+            strokeWeight(2);
+            rect(box.x - box.width / 2, box.y - box.height / 2, box.width, box.height, 4);
+            
+            // Draw applied force vector
+            if (appliedForce !== 0) {
+                stroke(33, 150, 243);
+                strokeWeight(4);
+                let arrowLength = map(Math.abs(appliedForce), 0, maxForce, 0, 100);
+                let arrowX = box.x + (appliedForce > 0 ? box.width / 2 : -box.width / 2);
+                drawArrow(arrowX, box.y, arrowX + arrowLength * Math.sign(appliedForce), box.y, 'Applied Force');
+            }
+            
+            // Draw friction force vector
+            if (Math.abs(box.vx) > 0.1) {
+                stroke(244, 67, 54);
+                strokeWeight(4);
+                let frictionLength = map(Math.abs(frictionForce), 0, maxForce, 0, 100);
+                let frictionX = box.x + (frictionForce > 0 ? box.width / 2 : -box.width / 2);
+                drawArrow(frictionX, box.y + 30, frictionX + frictionLength * Math.sign(frictionForce), box.y + 30, 'Friction');
+            }
+            
+            // Draw controls
+            fill(0);
+            noStroke();
+            textSize(16);
+            textAlign(CENTER);
+            text('Press LEFT/RIGHT arrows to apply force', width / 2, 40);
+            text('Press SPACE to stop', width / 2, 60);
+            
+            // Draw info panel
+            textAlign(LEFT);
+            textSize(14);
+            text(`Applied Force: ${appliedForce.toFixed(2)} N`, 10, height - 80);
+            text(`Friction Force: ${frictionForce.toFixed(2)} N`, 10, height - 60);
+            text(`Velocity: ${box.vx.toFixed(2)} m/s`, 10, height - 40);
+            text(`Acceleration: ${acceleration.toFixed(2)} m/s²`, 10, height - 20);
+        }
+        
+        function drawArrow(x1, y1, x2, y2, label) {
+            line(x1, y1, x2, y2);
+            push();
+            let angle = atan2(y2 - y1, x2 - x1);
+            translate(x2, y2);
+            rotate(angle);
+            triangle(-10, -5, -10, 5, 0, 0);
+            pop();
+            
+            // Label
+            fill(0);
+            noStroke();
+            textSize(12);
+            textAlign(CENTER);
+            text(label, (x1 + x2) / 2, y1 - 10);
+        }
+        
+        function keyPressed() {
+            if (keyCode === LEFT_ARROW) {
+                appliedForce = -maxForce;
+            } else if (keyCode === RIGHT_ARROW) {
+                appliedForce = maxForce;
+            } else if (key === ' ') {
+                box.vx = 0;
+                appliedForce = 0;
+            }
+        }
+        
+        function keyReleased() {
+            if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW) {
+                appliedForce = 0;
+            }
+        }
+    </script>
+</body>
+</html>

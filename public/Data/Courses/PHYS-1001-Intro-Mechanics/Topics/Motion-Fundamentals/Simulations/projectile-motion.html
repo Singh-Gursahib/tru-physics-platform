@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projectile Motion Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #e0f2f1, #b2dfdb);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #canvas-container {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        let ball;
+        let gravity = 0.5;
+        let trail = [];
+        
+        function setup() {
+            createCanvas(800, 600).parent(document.body);
+            ball = {
+                x: 50,
+                y: height - 50,
+                vx: 8,
+                vy: -15,
+                radius: 15
+            };
+        }
+        
+        function draw() {
+            background(224, 242, 241);
+            
+            // Draw ground
+            fill(139, 195, 74);
+            noStroke();
+            rect(0, height - 40, width, 40);
+            
+            // Draw grid
+            stroke(200, 230, 201, 100);
+            strokeWeight(1);
+            for (let i = 0; i < width; i += 50) {
+                line(i, 0, i, height - 40);
+            }
+            for (let i = 0; i < height - 40; i += 50) {
+                line(0, i, width, i);
+            }
+            
+            // Update ball physics
+            ball.vy += gravity;
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+            
+            // Add to trail
+            trail.push({x: ball.x, y: ball.y});
+            if (trail.length > 50) {
+                trail.shift();
+            }
+            
+            // Draw trail
+            noFill();
+            stroke(0, 150, 136, 150);
+            strokeWeight(2);
+            beginShape();
+            for (let point of trail) {
+                vertex(point.x, point.y);
+            }
+            endShape();
+            
+            // Bounce off ground
+            if (ball.y + ball.radius > height - 40) {
+                ball.y = height - 40 - ball.radius;
+                ball.vy *= -0.8;
+                ball.vx *= 0.95;
+            }
+            
+            // Bounce off walls
+            if (ball.x + ball.radius > width || ball.x - ball.radius < 0) {
+                ball.vx *= -0.8;
+                ball.x = constrain(ball.x, ball.radius, width - ball.radius);
+            }
+            
+            // Draw ball
+            fill(0, 150, 136);
+            noStroke();
+            circle(ball.x, ball.y, ball.radius * 2);
+            
+            // Draw velocity vector
+            stroke(244, 67, 54);
+            strokeWeight(3);
+            line(ball.x, ball.y, ball.x + ball.vx * 5, ball.y + ball.vy * 5);
+            
+            // Draw info
+            fill(0);
+            noStroke();
+            textSize(14);
+            textAlign(LEFT);
+            text(`Velocity: (${ball.vx.toFixed(2)}, ${ball.vy.toFixed(2)})`, 10, 20);
+            text(`Position: (${ball.x.toFixed(0)}, ${ball.y.toFixed(0)})`, 10, 40);
+            text('Click to reset', 10, height - 50);
+            
+            // Stop if ball is at rest
+            if (Math.abs(ball.vx) < 0.1 && Math.abs(ball.vy) < 0.1 && ball.y >= height - 40 - ball.radius) {
+                ball.vx = 0;
+                ball.vy = 0;
+            }
+        }
+        
+        function mousePressed() {
+            ball.x = 50;
+            ball.y = height - 50;
+            ball.vx = random(5, 12);
+            ball.vy = random(-18, -12);
+            trail = [];
+        }
+    </script>
+</body>
+</html>
