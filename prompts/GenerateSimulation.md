@@ -15,7 +15,7 @@ TRY TO UNDERSTAND WHAT THE QUESTION AIMS TO TEACH STUDENTS (Undergrad level stud
 Compute and display all relevant physics quantities (e.g., net force, applied force, acceleration, friction, velocity, stopping distance, etc.), and create a smooth, realistic **animation** showing the system in motion.
 
 Use a **clean, centered layout (800 × 600 canvas)** similar to other simulations.  
-On the **left**, include a **dark-teal sidebar** styled using **Tailwind CSS** with **sliders and controls** for tweakable parameters (mass, friction, applied force, velocity, etc. as per the question/use case). Also include the formulas and steps/calculations here to solve a problem(if required).  
+On the **left**, include a **teal sidebar** styled using **Tailwind CSS** with **white/light text for readability** on dark backgrounds with **sliders and controls** for tweakable parameters (mass, friction, applied force, velocity, etc. as per the question/use case). Also include the formulas and steps/calculations here to solve a problem(if required).  
 On the **bottom or right**, display the **simulation window** with a **light theme background**, clear vector arrows, labels, and animated visuals.
 
 Make the simulation **interactive and visually appealing**:
@@ -26,7 +26,8 @@ Make the simulation **interactive and visually appealing**:
 - Ensure all text and visuals are dynamically updated as parameters change.
 
 Everything (HTML, CSS, and JavaScript) must be contained in **one HTML file**, runnable directly in any browser without external dependencies.  
-If needed, refer to existing project structure for inspiration:
+
+If needed, refer to existing project structure for inspiration (A MUST!):
 **public/Data/Courses/PHYS-1001-Intro-Mechanics/Topics/Forces-and-Friction/Simulations/friction-demo.html**
 
 Think about implementation first and Make sure everything works! 

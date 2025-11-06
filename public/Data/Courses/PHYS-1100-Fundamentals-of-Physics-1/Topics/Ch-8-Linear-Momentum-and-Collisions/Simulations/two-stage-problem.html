@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Simulation: Two-Stage Problem</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-8">
+
+    <div class="container w-full max-w-7xl flex gap-8">
+
+        <!-- Left Sidebar: Controls & Information -->
+        <div class="w-1/3 bg-teal-800/90 text-white rounded-xl shadow-2xl h-[650px] p-6 flex flex-col overflow-y-auto">
+            
+            <!-- 1. Title -->
+            <div class="mb-4 pb-2 border-b border-teal-500">
+                <h1 class="text-2xl font-bold text-teal-100">Collision & Projectile Motion</h1>
+            </div>
+
+            <!-- 2. Context -->
+            <div class="mb-4">
+                <p class="text-teal-200 text-sm leading-relaxed">
+                    A bullet strikes a wooden block on a frictionless table. They stick together, fly off the edge, and land on the floor. This simulation works backward from the landing spot to find the bullet's initial speed, mirroring the problem-solving process.
+                </p>
+            </div>
+
+            <!-- 3. Interactive Controls & Given Data -->
+            <div class="mb-4 bg-teal-900/50 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold text-teal-100 mb-3">Given Data</h2>
+                <div class="font-mono text-sm space-y-1 text-teal-200">
+                    <p>Bullet Mass (mᵦ): <span class="font-bold text-white float-right">0.008 kg</span></p>
+                    <p>Block Mass (mᵪ): <span class="font-bold text-white float-right">0.250 kg</span></p>
+                    <p>Table Height (h): <span class="font-bold text-white float-right">1.00 m</span></p>
+                    <p>Landing Distance (d): <span class="font-bold text-white float-right">2.00 m</span></p>
+                </div>
+                
+                <h2 class="text-lg font-semibold text-teal-100 mb-3 mt-5">Animation Controls</h2>
+                <div class="grid grid-cols-1 gap-3">
+                    <button id="stage1Btn" class="bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded transition-colors duration-200">1. Animate Projectile (Reverse)</button>
+                    <button id="stage2Btn" class="bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-2 px-4 rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>2. Animate Collision (Reverse)</button>
+                    <button id="resetBtn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded transition-colors duration-200">Reset Simulation</button>
+                </div>
+            </div>
+
+            <!-- 4. Physics Formulas -->
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold text-teal-100 mb-2">Governing Equations</h2>
+                <div class="bg-gray-900/70 p-3 rounded-md font-mono text-teal-200 text-xs space-y-2">
+                    <p class="text-white font-bold">// Stage 1: Projectile Motion</p>
+                    <p>t = sqrt(2 * h / g)</p>
+                    <p>V = d / t  (Combined launch speed)</p>
+                    
+                    <p class="text-white font-bold pt-2">// Stage 2: Inelastic Collision</p>
+                    <p>p_initial = mᵦ * vᵦ</p>
+                    <p>p_final = (mᵦ + mᵪ) * V</p>
+                    <p>vᵦ = ((mᵦ + mᵪ) * V) / mᵦ</p>
+                </div>
+            </div>
+
+            <!-- 5. Calculated Values / Results -->
+            <div class="flex-grow">
+                <h2 class="text-lg font-semibold text-teal-100 mb-2">Calculated Results</h2>
+                <div class="bg-gray-900/70 p-3 rounded-md font-mono text-sm space-y-2">
+                    <p class="text-blue-300">Time of Flight (t): <span id="t-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="text-blue-300">Launch Speed (V): <span id="V-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="border-t border-teal-700 pt-2 mt-2 text-indigo-300">Initial Momentum (pᵢ): <span id="p-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="text-yellow-300 text-base">Bullet Speed (vᵦ): <span id="vb-calc" class="font-bold text-white float-right">...</span></p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Canvas Container -->
+        <div id="canvas-container" class="w-2/3 flex items-center justify-center">
+            <!-- p5.js canvas will be inserted here -->
+        </div>
+    </div>
+
+<script>
+let sketch = (p) => {
+    // --- Constants & World Setup ---
+    const CANVAS_WIDTH = 800;
+    const CANVAS_HEIGHT = 600;
+    const G = 9.81; // m/s^2
+
+    // Given Data
+    const M_BULLET = 0.008;
+    const M_BLOCK = 0.250;
+    const H_TABLE = 1.00;
+    const D_LAND = 2.00;
+    
+    // Calculated Physics Values
+    let timeOfFlight, launchSpeedV, initialMomentum, bulletSpeedVb;
+
+    // Simulation State
+    let simState = 'initial'; // initial, animatingProjectile, projectileDone, animatingCollision, collisionDone
+    let animProgress = 0; // 0 to 1
+    let animDuration = 2.0; // seconds
+
+    // Drawing & Scaling
+    let pixelsPerMeter;
+    const COLLISION_VISUAL_SCALE = 0.05; // New scale factor to visually slow down the bullet
+    let table, block, bullet, combinedBlock;
+    let projectilePath = [];
+
+    // --- Object Classes ---
+    class Entity {
+        constructor(x, y, w, h, color) {
+            this.x = x; this.y = y; this.w = w; this.h = h; this.color = color;
+        }
+        draw() {
+            p.fill(this.color);
+            p.noStroke();
+            p.rect(this.x, this.y, this.w, this.h);
+        }
+    }
+    
+    // --- p5.js Setup ---
+    p.setup = () => {
+        let canvas = p.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+        canvas.parent('canvas-container');
+        canvas.style('border', '1px solid #4A5568');
+        canvas.style('box-shadow', '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)');
+        
+        calculatePhysics();
+        initializeSimulation();
+        attachEventListeners();
+    };
+
+    // --- p5.js Draw Loop ---
+    p.draw = () => {
+        p.background(241, 245, 249); // bg-slate-100
+        
+        drawWorld();
+        drawStatusBar();
+        
+        let dt = p.deltaTime / 1000;
+        
+        // --- State Machine ---
+        if (simState === 'initial' || simState === 'projectileDone') {
+            combinedBlock.draw();
+            if(simState === 'projectileDone') {
+                 drawVector(combinedBlock.x, combinedBlock.y - combinedBlock.h, launchSpeedV * 20, `V = ${launchSpeedV.toFixed(2)} m/s`, p.color(34, 197, 94));
+            }
+        } 
+        else if (simState === 'animatingProjectile') {
+            animProgress += dt / animDuration;
+            if (animProgress >= 1) {
+                animProgress = 1;
+                simState = 'projectileDone';
+                document.getElementById('stage1Btn').disabled = true;
+                document.getElementById('stage2Btn').disabled = false;
+                document.getElementById('t-calc').textContent = `${timeOfFlight.toFixed(3)} s`;
+                document.getElementById('V-calc').textContent = `${launchSpeedV.toFixed(3)} m/s`;
+            }
+            updateProjectileAnimation();
+            combinedBlock.draw();
+            drawPathTrace();
+        } 
+        else if (simState === 'animatingCollision') {
+            animProgress += dt / animDuration;
+            if (animProgress >= 1) {
+                animProgress = 1;
+                simState = 'collisionDone';
+                document.getElementById('stage2Btn').disabled = true;
+                document.getElementById('p-calc').textContent = `${initialMomentum.toFixed(3)} kg·m/s`;
+                document.getElementById('vb-calc').textContent = `${bulletSpeedVb.toFixed(2)} m/s`;
+            }
+            updateCollisionAnimation();
+            block.draw();
+            bullet.draw();
+        } 
+        else if (simState === 'collisionDone') {
+            block.draw();
+            bullet.draw();
+            // Draw bullet vector scaled for visibility
+            drawVector(bullet.x + bullet.w / 2, bullet.y + bullet.h / 2, -bulletSpeedVb * COLLISION_VISUAL_SCALE * 2, `vᵦ = ${bulletSpeedVb.toFixed(2)} m/s`, p.color(239, 68, 68));
+        }
+    };
+    
+    // --- Simulation & Calculation ---
+    function calculatePhysics() {
+        timeOfFlight = Math.sqrt(2 * H_TABLE / G);
+        launchSpeedV = D_LAND / timeOfFlight;
+        
+        const totalMass = M_BULLET + M_BLOCK;
+        initialMomentum = totalMass * launchSpeedV;
+        bulletSpeedVb = initialMomentum / M_BULLET;
+    }
+
+    function initializeSimulation() {
+        simState = 'initial';
+        animProgress = 0;
+
+        // Reset UI
+        document.getElementById('stage1Btn').disabled = false;
+        document.getElementById('stage2Btn').disabled = true;
+        ['t-calc', 'V-calc', 'p-calc', 'vb-calc'].forEach(id => document.getElementById(id).textContent = '...');
+
+        // Set scaling and positions
+        pixelsPerMeter = (CANVAS_HEIGHT * 0.7) / (H_TABLE * 1.2);
+        const tableHeightPx = H_TABLE * pixelsPerMeter;
+        const tableWidthPx = CANVAS_WIDTH * 0.6;
+        const tableY = CANVAS_HEIGHT - 50 - tableHeightPx;
+        
+        table = new Entity(0, tableY, tableWidthPx, tableHeightPx, p.color(139, 69, 19));
+        
+        const blockHeightPx = 50;
+        const blockWidthPx = 50;
+        const bulletWidthPx = 8;
+        const bulletHeightPx = 4;
+        
+        // Initial position (on the ground)
+        combinedBlock = new Entity(
+            table.w + D_LAND * pixelsPerMeter - blockWidthPx, 
+            CANVAS_HEIGHT - 50 - blockHeightPx,
+            blockWidthPx, blockHeightPx, p.color(200, 150, 100)
+        );
+        
+        // Position of objects when collision starts (on the table)
+        const collisionStartX = table.w - blockWidthPx;
+        
+        block = new Entity(collisionStartX, table.y - blockHeightPx, blockWidthPx, blockHeightPx, p.color(200, 150, 100));
+        bullet = new Entity(collisionStartX - bulletWidthPx, block.y + blockHeightPx / 2 - bulletHeightPx / 2, bulletWidthPx, bulletHeightPx, p.color(50));
+
+        // Ensure combined block is correctly positioned on the table for the start of Stage 2
+        combinedBlock.x = collisionStartX;
+        combinedBlock.y = table.y - blockHeightPx;
+        combinedBlock.w = blockWidthPx + 5; // Slightly wider to show merging
+        
+        // Pre-calculate projectile path for animation
+        projectilePath = [];
+        for (let t = 0; t <= timeOfFlight; t += 0.01) {
+            let x = table.w + launchSpeedV * t * pixelsPerMeter;
+            let y = table.y + 0.5 * G * t * t * pixelsPerMeter;
+            projectilePath.push({x: x, y: y});
+        }
+    }
+
+    // --- Animation Updates ---
+    function updateProjectileAnimation() {
+        // Interpolate backwards along the path
+        const pathIndex = Math.floor((1 - animProgress) * (projectilePath.length - 1));
+        const currentPos = projectilePath[pathIndex];
+        
+        // The block is the object tracing the path. We must use the center of mass calculation
+        // but here we simply move the whole combined entity
+        if (currentPos) {
+            combinedBlock.x = currentPos.x - combinedBlock.w / 2;
+            combinedBlock.y = currentPos.y - combinedBlock.h / 2;
+        }
+    }
+    
+    function updateCollisionAnimation() {
+        // Start position for collision phase (Combined object on the table edge)
+        const collisionStartX = table.w - combinedBlock.w;
+        const blockHeightPx = block.h;
+        const bulletWidthPx = bullet.w;
+
+        // Block's position (stays fixed at the collision point)
+        block.x = collisionStartX;
+        
+        // Bullet starts embedded (relative position) and moves backward
+        // Calculate the maximum displacement the bullet needs to achieve to represent its high speed,
+        // using the visual scale factor.
+        const maxVisualSeparation = 100; // 100 pixels of visual separation is enough
+        
+        // Bullet's actual animated x position
+        let bulletX = collisionStartX - M_BLOCK / (M_BULLET + M_BLOCK) * combinedBlock.w; // Start position
+        bulletX -= maxVisualSeparation * animProgress; // Visually separate the bullet
+        
+        // Keep the bullet within the frame (preventing negative x or too small x)
+        bullet.x = p.max(50, bulletX); 
+    }
+    
+    // --- Drawing Helpers ---
+    function drawWorld() {
+        // Floor
+        p.fill(150);
+        p.noStroke();
+        p.rect(0, CANVAS_HEIGHT - 50, CANVAS_WIDTH, 50);
+        
+        // Table
+        table.draw();
+        p.fill(119, 59, 9); // darker legs
+        p.rect(table.w * 0.1, table.y + table.h, 20, CANVAS_HEIGHT - (table.y + table.h) - 50);
+        p.rect(table.w * 0.8, table.y + table.h, 20, CANVAS_HEIGHT - (table.y + table.h) - 50);
+        
+        // Draw markings for distance (D) and height (H)
+        p.push();
+        p.stroke(0, 0, 0, 100);
+        p.strokeWeight(1);
+        p.drawingContext.setLineDash([5, 5]);
+
+        // Height marker (H)
+        p.line(table.w + 10, table.y, table.w + 10, CANVAS_HEIGHT - 50);
+        p.fill(50);
+        p.textSize(12);
+        p.textAlign(p.LEFT, p.CENTER);
+        p.text(`H = ${H_TABLE} m`, table.w + 15, table.y + table.h / 2);
+
+        // Distance marker (D)
+        p.line(table.w, CANVAS_HEIGHT - 40, combinedBlock.x + combinedBlock.w / 2, CANVAS_HEIGHT - 40);
+        p.line(table.w, CANVAS_HEIGHT - 50, table.w, CANVAS_HEIGHT - 30);
+        p.line(combinedBlock.x + combinedBlock.w / 2, CANVAS_HEIGHT - 50, combinedBlock.x + combinedBlock.w / 2, CANVAS_HEIGHT - 30);
+        p.textAlign(p.CENTER, p.BOTTOM);
+        p.text(`D = ${D_LAND} m`, table.w + (combinedBlock.x + combinedBlock.w / 2 - table.w) / 2, CANVAS_HEIGHT - 45);
+        
+        p.pop();
+    }
+    
+    function drawStatusBar() {
+        let statusText = "Ready. Press button 1 to start.";
+        if (simState === 'animatingProjectile') statusText = "Stage 1 (Reverse): Animating projectile path...";
+        if (simState === 'projectileDone') statusText = "Launch speed calculated. Press button 2.";
+        if (simState === 'animatingCollision') statusText = "Stage 2 (Reverse): Deconstructing collision...";
+        if (simState === 'collisionDone') statusText = "Simulation complete! Bullet's initial speed found.";
+        
+        p.push();
+        p.fill(50, 50, 50, 200);
+        p.noStroke();
+        p.rect(0, 0, CANVAS_WIDTH, 30);
+        p.fill(255);
+        p.textSize(16);
+        p.textAlign(p.LEFT, p.CENTER);
+        p.text(`Status: ${statusText}`, 10, 15);
+        p.pop();
+    }
+
+    function drawPathTrace() {
+        p.noFill();
+        p.stroke(0, 150, 255, 150);
+        p.strokeWeight(2);
+        p.beginShape();
+        const startIndex = Math.floor((1 - animProgress) * (projectilePath.length - 1));
+        for (let i = startIndex; i < projectilePath.length; i++) {
+            // Draw path using the center of the block
+            p.vertex(projectilePath[i].x - combinedBlock.w/2, projectilePath[i].y - combinedBlock.h/2);
+        }
+        p.endShape();
+    }
+
+    function drawVector(x, y, mag, label, vColor) {
+        p.push();
+        p.stroke(vColor);
+        p.strokeWeight(2.5);
+        p.fill(vColor);
+
+        // Line
+        p.line(x, y, x + mag, y);
+        // Arrowhead
+        p.translate(x + mag, y);
+        let angle = mag >= 0 ? 0 : p.PI;
+        p.rotate(angle);
+        p.triangle(0, 0, -8, -4, -8, 4);
+
+        p.noStroke();
+        p.fill(50);
+        p.textSize(12);
+        p.textAlign(mag >= 0 ? p.LEFT : p.RIGHT, p.BOTTOM);
+        p.text(label, mag >= 0 ? 10 : -10, -5);
+        p.pop();
+    }
+
+    // --- UI Interaction ---
+    function attachEventListeners() {
+        document.getElementById('stage1Btn').addEventListener('click', () => {
+            if (simState === 'initial') {
+                simState = 'animatingProjectile';
+                animProgress = 0;
+            }
+        });
+        document.getElementById('stage2Btn').addEventListener('click', () => {
+            if (simState === 'projectileDone') {
+                simState = 'animatingCollision';
+                animProgress = 0;
+                // Re-position the combined block to the collision point before stage 2 starts
+                combinedBlock.x = table.w - combinedBlock.w;
+                combinedBlock.y = table.y - combinedBlock.h;
+                
+                // Set initial block/bullet positions for collision animation
+                block.x = combinedBlock.x;
+                block.y = combinedBlock.y;
+                bullet.x = block.x + block.w / 2 - bullet.w / 2; // bullet starts embedded
+                bullet.y = block.y + block.h / 2 - bullet.h / 2;
+            }
+        });
+        document.getElementById('resetBtn').addEventListener('click', initializeSimulation);
+    }
+};
+
+// Instantiate p5.js
+let p5_instance = new p5(sketch);
+
+</script>
+</body>
+</html>

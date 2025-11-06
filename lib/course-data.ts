@@ -148,6 +148,103 @@ export const courses: Course[] = [
               "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-7-Work-and-Energy/Simulations/work-done-by-forces.html",
             tags: ["work", "energy", "force-angle", "dot-product", "physics-problem-solving"],
           },
+          {
+            id: "conservation-of-energy",
+            title: "Conservation of Energy: Potential to Kinetic",
+            description:
+              "Watch a tennis ball fall from a height and observe the real-time conversion of gravitational potential energy into kinetic energy. As it falls, potential energy decreases while kinetic energy increases, keeping the total mechanical energy constant. Interactive sliders let you adjust mass, height, and gravity to explore how these parameters affect the energy transformation.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-7-Work-and-Energy/Simulations/conservation-of-energy.html",
+            tags: ["conservation-of-energy", "potential-energy", "kinetic-energy", "mechanical-energy", "falling-objects", "energy-conversion"],
+          },
+          {
+            id: "bike-trailer",
+            title: "Work and Energy with Non-Conservative Force",
+            description:
+              "Monica pulls her daughter Jessie in a bike trailer up a slope. Observe how the external pulling force adds energy to the system. Use the generalized work-energy theorem to calculate final velocity: ½m·v_i² + F_pull·d = ½m·v_f² + m·g·h. Adjust mass, slope height, pulling force, and initial velocity to see how each parameter affects the final speed.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-7-Work-and-Energy/Simulations/bike-trailer.html",
+            tags: ["work-energy-theorem", "non-conservative-force", "external-force", "energy-transformation", "bike-trailer", "slope-mechanics"],
+          },
+          {
+            id: "power-comparison",
+            title: "Power Comparison: Students Climbing Stairs",
+            description:
+              "Compare the power output of four students climbing stairs. Power is the rate at which work is done (P = W/t = mgh/t). Discover how mass, height, and time combine to determine power output. Student B has the highest power despite not climbing the highest or being the lightest—it's about efficiency!",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-7-Work-and-Energy/Simulations/power-comparison.html",
+            tags: ["power", "work", "energy", "rate-of-work", "efficiency", "comparative-analysis", "student-climbing"],
+          },
+        ],
+      },
+      {
+        id: "linear-momentum-collisions",
+        name: "Ch 8: Linear Momentum and Collisions",
+        description: "Explore momentum, the relationship between mass and velocity, and how objects collide and transfer momentum.",
+        simulations: [
+          {
+            id: "comparing-momentum",
+            title: "Comparing Momentum: Tricycle vs Truck",
+            description:
+              "Discover which has greater momentum: a 1000 kg tricycle at 60 m/s or a 3000 kg truck at 60 m/s? Adjust velocities interactively and observe real-time momentum calculations using p = m·v. Visualize momentum bars and understand why mass matters as much as speed.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-8-Linear-Momentum-and-Collisions/Simulations/comparing-momentum.html",
+            tags: ["momentum", "mass", "velocity", "conservation-of-momentum", "comparative-analysis", "p=mv"],
+          },
+          {
+            id: "impulse-bouncing",
+            title: "Impulse and Bouncing",
+            description:
+              "Explore the impulse-momentum theorem through a ball bouncing off a wall. Understand how momentum is a vector quantity and how a reversal in direction creates a large impulse. Adjust mass and velocities to see how Δp = m(v_f - v_i) and how Impulse = Δp. Watch the animation of the collision and observe the impulse vector in real-time.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-8-Linear-Momentum-and-Collisions/Simulations/impulse-bouncing.html",
+            tags: ["impulse", "momentum", "impulse-momentum-theorem", "vector-quantity", "collision", "direction-reversal", "change-in-momentum"],
+          },
+          {
+            id: "ice-skaters-momentum",
+            title: "Conservation of Momentum: Ice Skaters",
+            description:
+              "Two ice skaters push off each other on frictionless ice. Starting at rest with zero total momentum, they move apart at different velocities due to their different masses. Watch momentum vectors point in opposite directions with equal magnitudes, confirming that total momentum remains zero.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-8-Linear-Momentum-and-Collisions/Simulations/ice-skaters-momentum.html",
+            tags: ["conservation-of-momentum", "momentum-vectors", "explosion", "ice-skaters", "frictionless-surface", "mass-velocity-relationship"],
+          },
+          {
+            id: "explosion-boxes-momentum",
+            title: "Conservation of Momentum: Explosion from Rest",
+            description:
+              "Two boxes sitting together at rest explode apart on a frictionless surface. The 1-kg box shoots left at 4 m/s while the 2-kg box moves right at 2 m/s. Observe how the lighter box moves twice as fast as the heavier box, and momentum vectors remain equal and opposite with total momentum staying at zero.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-8-Linear-Momentum-and-Collisions/Simulations/explosion-boxes-momentum.html",
+            tags: ["conservation-of-momentum", "momentum-vectors", "explosion", "frictionless-surface", "mass-velocity-relationship", "quick-check"],
+          },
+          {
+            id: "inelastic-collision",
+            title: "Perfectly Inelastic Collision",
+            description:
+              "Two boxes on a frictionless surface collide and stick together. One box moves at +4 m/s while the other moves at -2 m/s. The simulation shows how momentum is conserved as the combined mass comes to rest, demonstrating that the initial and final momenta are equal.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-8-Linear-Momentum-and-Collisions/Simulations/inelastic-collision.html",
+            tags: ["inelastic-collision", "conservation-of-momentum", "collision", "combined-mass", "frictionless-surface"],
+          },
+          {
+            id: "two-stage-problem",
+            title: "Two-Stage Problem: Collision & Projectile Motion",
+            description:
+              "A bullet embeds in a wooden block on a table, which then falls off and lands at a measured distance. Work backward through projectile motion to find the launch speed, then use collision dynamics to determine the bullet's initial speed. Combines momentum conservation with kinematics.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-8-Linear-Momentum-and-Collisions/Simulations/two-stage-problem.html",
+            tags: ["two-stage-problem", "collision", "projectile-motion", "momentum-conservation", "problem-solving"],
+          },
+          {
+            id: "collision-2d",
+            title: "2D Collision: Momentum Conservation",
+            description:
+              "Two poker chips collide on a frictionless table in two dimensions. Analyze momentum conservation independently in the x and y directions. Determine the final velocity of the blue chip and check whether the collision was elastic or inelastic using kinetic energy.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-8-Linear-Momentum-and-Collisions/Simulations/collision-2d.html",
+            tags: ["2d-collision", "conservation-of-momentum", "momentum-vectors", "elastic-collision", "kinetic-energy"],
+          },
         ],
       },
     ],

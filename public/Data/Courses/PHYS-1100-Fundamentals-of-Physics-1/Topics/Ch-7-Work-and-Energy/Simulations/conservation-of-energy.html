@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conservation of Energy: Potential to Kinetic</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 1400px;
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, #00796b 0%, #004d40 100%);
+            padding: 25px;
+            border-radius: 8px;
+            color: white;
+            width: 340px;
+            font-size: 14px;
+            max-height: 700px;
+            overflow-y: auto;
+        }
+        
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .scenario-selector {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+        
+        .scenario-btn {
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            text-align: left;
+        }
+        
+        .scenario-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .scenario-btn.active {
+            background: #26a69a;
+            border-color: #4db6ac;
+            box-shadow: 0 0 12px rgba(76, 175, 80, 0.5);
+        }
+        
+        .control-group {
+            margin-bottom: 18px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .slider-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            cursor: pointer;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border: none;
+        }
+        
+        .value-display {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 4px;
+            min-width: 60px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 14px;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        
+        .info-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: #00796b;
+            text-transform: uppercase;
+            border-bottom: 2px solid #b2dfdb;
+            padding-bottom: 6px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            color: #222;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .info-value {
+            font-family: 'Courier New', monospace;
+            color: #00796b;
+            font-weight: 600;
+        }
+        
+        .energy-bar-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            height: 20px;
+        }
+        
+        .energy-bar {
+            flex: 1;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .energy-bar.potential {
+            background: linear-gradient(90deg, #e8f5e9, #4caf50);
+        }
+        
+        .energy-bar.kinetic {
+            background: linear-gradient(90deg, #fce4ec, #ff4081);
+        }
+        
+        .energy-bar.total {
+            background: linear-gradient(90deg, #f3e5f5, #7c4dff);
+        }
+        
+        .energy-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.05s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .problem-box {
+            background: linear-gradient(135deg, #fff9e6, #fff3e0);
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #1a1a1a;
+            border-left: 4px solid #ffa726;
+        }
+        
+        .problem-box h4 {
+            margin: 0 0 8px 0;
+            color: #e65100;
+            font-size: 13px;
+        }
+        
+        .data-item {
+            padding: 4px 0;
+            color: #555;
+        }
+        
+        .data-item strong {
+            color: #e65100;
+        }
+        
+        .formula-box {
+            background: rgba(76, 175, 80, 0.1);
+            border: 2px solid rgba(76, 175, 80, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            color: #1b5e20;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+        
+        .formula-box h4 {
+            margin: 0 0 8px 0;
+            color: #2e7d32;
+            font-size: 13px;
+        }
+        
+        .formula-box div {
+            margin: 4px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #ffffff;
+        }
+        
+        .energy-transition-box {
+            background: rgba(156, 39, 176, 0.1);
+            border: 2px solid rgba(156, 39, 176, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+        
+        .energy-transition-box h4 {
+            margin: 0 0 8px 0;
+            color: #ffffff;
+            font-size: 13px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            margin-bottom: 16px;
+        }
+        
+        button.control-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        button.control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        button.control-btn.active {
+            background: #26a69a;
+            border-color: #4db6ac;
+        }
+        
+        .canvas-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        #canvas {
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-text {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>⚡ Energy Explorer</h2>
+            
+            <div style="font-size: 11px; margin-bottom: 14px; padding: 10px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; line-height: 1.6;">
+                <strong>Concept:</strong> Watch a falling tennis ball convert its potential energy into kinetic energy while total mechanical energy remains constant!
+            </div>
+            
+            <div class="control-group">
+                <label>🎾 Tennis Ball Mass</label>
+                <div class="slider-container">
+                    <input type="range" id="massSlider" min="0.01" max="0.5" value="0.05" step="0.01">
+                    <div class="value-display" id="massValue">0.050 kg</div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>📏 Drop Height</label>
+                <div class="slider-container">
+                    <input type="range" id="heightSlider" min="5" max="50" value="20" step="1">
+                    <div class="value-display" id="heightValue">20.0 m</div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>⚙️ Gravity</label>
+                <div class="slider-container">
+                    <input type="range" id="gravitySlider" min="1" max="15" value="9.8" step="0.1">
+                    <div class="value-display" id="gravityValue">9.8 m/s²</div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="control-btn active" onclick="toggleAnimation()">▶ Play / ⏸ Pause</button>
+                <button class="control-btn" onclick="resetAnimation()">↻ Reset</button>
+            </div>
+            
+            <div class="info-panel">
+                <h3>📊 Real-Time Data</h3>
+                <div class="info-row">
+                    <span class="info-label">Height (h):</span>
+                    <span class="info-value" id="hValue">20.0 m</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Velocity (v):</span>
+                    <span class="info-value" id="vValue">0.0 m/s</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">g:</span>
+                    <span class="info-value" id="gValue">9.8 m/s²</span>
+                </div>
+                <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div style="margin-top: 8px;">
+                    <strong style="font-size: 11px; color: #00796b;">Energy Distribution:</strong>
+                    <div style="margin-top: 6px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px;">
+                            <span style="color: #2e7d32;">Potential</span>
+                            <span style="color: #2e7d32;" id="uPercent">100%</span>
+                        </div>
+                        <div class="energy-bar potential">
+                            <div class="energy-fill" id="uFill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 6px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px;">
+                            <span style="color: #d81b60;">Kinetic</span>
+                            <span style="color: #d81b60;" id="kPercent">0%</span>
+                        </div>
+                        <div class="energy-bar kinetic">
+                            <div class="energy-fill" id="kFill" style="width: 0%; background: #ff4081;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ccc;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px;">
+                            <span style="color: #7c4dff;"><strong>Total (E)</strong></span>
+                            <span style="color: #7c4dff; font-weight: 600;" id="eTotal">9.8 J</span>
+                        </div>
+                        <div class="energy-bar total">
+                            <div class="energy-fill" id="eFill" style="width: 100%; background: #7c4dff;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="energy-transition-box">
+                <h4>🔄 Energy Conversion</h4>
+                <div style="margin: 8px 0;">
+                    <strong style="color: #4caf50;">Potential:</strong> U = mgh
+                </div>
+                <div style="margin: 8px 0;">
+                    <strong style="color: #ff4081;">Kinetic:</strong> K = ½mv²
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.1);">
+                    <strong style="color: #7c4dff; display: block; margin-bottom: 4px;">Conservation:</strong>
+                    <div style="font-size: 11px; color: #6a1b9a;">E = K + U = constant</div>
+                </div>
+            </div>
+            
+            <div class="problem-box">
+                <h4>🎯 Sample Problem</h4>
+                <div class="data-item"><strong>Mass (m):</strong> 50 g (0.050 kg)</div>
+                <div class="data-item"><strong>Height (h):</strong> 20 m</div>
+                <div class="data-item"><strong>Gravity (g):</strong> 9.8 m/s²</div>
+                <div class="data-item"><strong>v₀:</strong> 0 m/s</div>
+                <hr style="margin: 8px 0; border: none; border-top: 1px solid rgba(0, 0, 0, 0.2);">
+                <div style="margin-top: 8px;">
+                    <strong style="color: #e65100; display: block; margin-bottom: 4px;">Question:</strong>
+                    <div style="font-size: 11px; color: #555;">What is the kinetic energy when it reaches the ground?</div>
+                </div>
+            </div>
+            
+            <div class="formula-box">
+                <h4>📐 Key Formulas</h4>
+                <div><strong>Potential Energy:</strong></div>
+                <div>U = mgh</div>
+                <div style="margin-top: 6px;"><strong>Kinetic Energy:</strong></div>
+                <div>K = ½mv²</div>
+                <div style="margin-top: 6px;"><strong>Velocity (at height h):</strong></div>
+                <div>v = √(2gh)</div>
+                <div style="margin-top: 6px;"><strong>Total Mechanical Energy:</strong></div>
+                <div>E = K + U (constant)</div>
+            </div>
+        </div>
+        
+        <div class="canvas-wrapper">
+            <div id="canvas-container"></div>
+            <div class="info-text">
+                <strong>How it works:</strong> Click Play to drop the tennis ball. Observe how potential energy converts to kinetic energy.
+                <br><strong>Adjust parameters</strong> to see how mass and height affect the total energy!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const g_earth = 9.8;
+        let mass = 0.05; // kg
+        let height = 20; // m
+        let gravity = 9.8; // m/s²
+        let isAnimating = true;
+        
+        // Animation state
+        let currentHeight = 20; // m
+        let currentVelocity = 0; // m/s
+        let timeElapsed = 0;
+        let ballRadius = 0;
+        
+        const g_const = 9.8;
+        
+        function setup() {
+            const canvas = createCanvas(800, 600).parent(document.getElementById('canvas-container'));
+            ballRadius = 8;
+            
+            // Event listeners
+            document.getElementById('massSlider').addEventListener('input', (e) => {
+                mass = parseFloat(e.target.value);
+                document.getElementById('massValue').textContent = mass.toFixed(3) + ' kg';
+                resetAnimation();
+                updatePhysics();
+            });
+            
+            document.getElementById('heightSlider').addEventListener('input', (e) => {
+                height = parseFloat(e.target.value);
+                document.getElementById('heightValue').textContent = height.toFixed(1) + ' m';
+                resetAnimation();
+                updatePhysics();
+            });
+            
+            document.getElementById('gravitySlider').addEventListener('input', (e) => {
+                gravity = parseFloat(e.target.value);
+                document.getElementById('gravityValue').textContent = gravity.toFixed(1) + ' m/s²';
+                resetAnimation();
+                updatePhysics();
+            });
+            
+            updatePhysics();
+        }
+        
+        function draw() {
+            background(240, 245, 250);
+            
+            // Update animation
+            if (isAnimating) {
+                const dt = 0.016; // ~60 FPS
+                const accel = gravity; // m/s²
+                
+                // Use kinematic equations
+                timeElapsed += dt;
+                currentHeight = height - 0.5 * accel * timeElapsed * timeElapsed;
+                currentVelocity = accel * timeElapsed;
+                
+                // Stop when hitting ground
+                if (currentHeight <= 0) {
+                    currentHeight = 0;
+                    currentVelocity = 0;
+                    // Don't reset animation, just pause
+                }
+            }
+            
+            // Title and info
+            fill(0, 121, 107);
+            noStroke();
+            textSize(24);
+            textAlign(CENTER);
+            textStyle(BOLD);
+            text('Conservation of Mechanical Energy', 400, 35);
+            textStyle(NORMAL);
+            
+            // Scale factors
+            const pixelScale = 15; // pixels per meter
+            const groundLevel = 500;
+            
+            // Draw ground
+            stroke(139, 121, 94);
+            strokeWeight(3);
+            line(100, groundLevel, 700, groundLevel);
+            
+            // Draw ground pattern
+            stroke(180, 160, 130);
+            strokeWeight(1);
+            for (let x = 100; x < 700; x += 20) {
+                line(x, groundLevel, x + 10, groundLevel + 10);
+            }
+            
+            // Draw ruler/height markers
+            stroke(200, 200, 200);
+            strokeWeight(1);
+            for (let h = 0; h <= height; h += 5) {
+                const y = groundLevel - h * pixelScale;
+                if (h % 10 === 0) {
+                    strokeWeight(2);
+                    stroke(150, 150, 150);
+                    line(80, y, 100, y);
+                    fill(100);
+                    textSize(10);
+                    textAlign(RIGHT);
+                    text(h + ' m', 75, y + 4);
+                } else {
+                    strokeWeight(1);
+                    stroke(200, 200, 200);
+                    line(85, y, 100, y);
+                }
+            }
+            
+            // Draw initial height line (dashed)
+            stroke(200, 100, 100);
+            strokeWeight(1);
+            drawingContext.setLineDash([5, 5]);
+            line(100, groundLevel - height * pixelScale, 700, groundLevel - height * pixelScale);
+            drawingContext.setLineDash([]);
+            fill(200, 100, 100);
+            textSize(11);
+            textAlign(LEFT);
+            text('Initial: ' + height.toFixed(1) + ' m', 710, groundLevel - height * pixelScale + 4);
+            
+            // Draw current height indicator
+            const ballY = groundLevel - currentHeight * pixelScale;
+            stroke(76, 175, 80);
+            strokeWeight(2);
+            drawingContext.setLineDash([5, 5]);
+            line(100, ballY, 700, ballY);
+            drawingContext.setLineDash([]);
+            fill(76, 175, 80);
+            textSize(11);
+            textAlign(LEFT);
+            text('Current: ' + currentHeight.toFixed(2) + ' m', 710, ballY + 4);
+            
+            // Draw the falling ball
+            push();
+            // Ball with gradient effect
+            fill(255, 193, 7);
+            stroke(255, 152, 0);
+            strokeWeight(2);
+            circle(400, ballY, ballRadius * 2);
+            
+            // Highlight
+            fill(255, 255, 255, 100);
+            noStroke();
+            circle(400 - ballRadius / 2, ballY - ballRadius / 2, ballRadius);
+            
+            // Velocity vector
+            if (currentVelocity > 0.1) {
+                stroke(255, 87, 34);
+                strokeWeight(3);
+                const velocityLength = Math.min(currentVelocity * 15, 80);
+                line(400, ballY + ballRadius, 400, ballY + ballRadius + velocityLength);
+                
+                // Arrow head
+                fill(255, 87, 34);
+                noStroke();
+                triangle(400, ballY + ballRadius + velocityLength, 
+                        395, ballY + ballRadius + velocityLength - 10,
+                        405, ballY + ballRadius + velocityLength - 10);
+                
+                // Label
+                fill(255, 87, 34);
+                textSize(11);
+                textAlign(CENTER);
+                text('v = ' + currentVelocity.toFixed(2) + ' m/s', 400, ballY + ballRadius + velocityLength + 20);
+            }
+            pop();
+            
+            // Energy visualization - Left side
+            push();
+            translate(120, 100);
+            
+            // Potential energy bar
+            let U_bar = mass * gravity * currentHeight;
+            let K_bar = 0.5 * mass * currentVelocity * currentVelocity;
+            let E_total_bar = mass * gravity * height; // Total energy (at max height, all potential)
+            
+            let uRatio = E_total_bar > 0 ? U_bar / E_total_bar : 0;
+            let kRatio = E_total_bar > 0 ? K_bar / E_total_bar : 0;
+            
+            // Title
+            fill(0, 121, 107);
+            textSize(13);
+            textStyle(BOLD);
+            text('Energy Bars', 0, 0);
+            textStyle(NORMAL);
+            
+            // Potential energy
+            fill(76, 175, 80);
+            textSize(11);
+            text('Potential Energy (U = mgh)', 0, 25);
+            fill(76, 175, 80);
+            stroke(100, 150, 100);
+            strokeWeight(2);
+            rect(0, 30, 150 * uRatio, 25);
+            fill(0);
+            noStroke();
+            textSize(10);
+            textAlign(CENTER);
+            if (uRatio > 0.15) text(U_bar.toFixed(1) + ' J', 75 * uRatio, 47);
+            
+            // Kinetic energy
+            fill(255, 87, 34);
+            textSize(11);
+            textAlign(LEFT);
+            text('Kinetic Energy (K = ½mv²)', 0, 80);
+            fill(255, 87, 34);
+            stroke(255, 120, 80);
+            strokeWeight(2);
+            rect(0, 85, 150 * kRatio, 25);
+            fill(0);
+            noStroke();
+            textSize(10);
+            textAlign(CENTER);
+            if (kRatio > 0.15) text(K_bar.toFixed(1) + ' J', 75 * kRatio, 102);
+            
+            // Total energy
+            fill(124, 77, 255);
+            textSize(11);
+            textAlign(LEFT);
+            textStyle(BOLD);
+            text('Total Energy (E = K + U)', 0, 135);
+            textStyle(NORMAL);
+            fill(124, 77, 255);
+            stroke(150, 100, 200);
+            strokeWeight(2);
+            rect(0, 140, 150, 25);
+            fill(255);
+            textSize(10);
+            textAlign(CENTER);
+            textStyle(BOLD);
+            text(E_total_bar.toFixed(2) + ' J', 75, 157);
+            textStyle(NORMAL);
+            
+            pop();
+            
+            // Calculation panel - Right side
+            push();
+            translate(550, 100);
+            
+            fill(0, 121, 107);
+            textSize(13);
+            textStyle(BOLD);
+            text('Calculations', 0, 0);
+            textStyle(NORMAL);
+            
+            let U_calc = mass * gravity * currentHeight;
+            let K_calc = 0.5 * mass * currentVelocity * currentVelocity;
+            let E_total_calc = mass * gravity * height;
+            
+            fill(50);
+            textSize(11);
+            textAlign(LEFT);
+            
+            // Potential energy calculation
+            text('Potential Energy:', 0, 25);
+            fill(76, 175, 80);
+            textSize(10);
+            text('U = mgh', 0, 40);
+            text('U = ' + mass.toFixed(3) + ' × ' + gravity.toFixed(1) + ' × ' + currentHeight.toFixed(2), 0, 53);
+            fill(76, 175, 80);
+            textStyle(BOLD);
+            text('U = ' + U_calc.toFixed(2) + ' J', 0, 68);
+            textStyle(NORMAL);
+            
+            // Kinetic energy calculation
+            fill(50);
+            text('Kinetic Energy:', 0, 90);
+            fill(255, 87, 34);
+            textSize(10);
+            text('K = ½mv²', 0, 105);
+            text('K = ½ × ' + mass.toFixed(3) + ' × ' + currentVelocity.toFixed(2) + '²', 0, 118);
+            fill(255, 87, 34);
+            textStyle(BOLD);
+            text('K = ' + K_calc.toFixed(2) + ' J', 0, 133);
+            textStyle(NORMAL);
+            
+            // Total energy
+            fill(50);
+            text('Total Energy:', 0, 155);
+            fill(124, 77, 255);
+            textStyle(BOLD);
+            textSize(11);
+            text('E = K + U = ' + (K_calc + U_calc).toFixed(2) + ' J', 0, 171);
+            text('(Maximum: ' + E_total_calc.toFixed(2) + ' J)', 0, 186);
+            textStyle(NORMAL);
+            
+            // At ground level - special message
+            if (currentHeight < 0.5) {
+                fill(220, 20, 60);
+                textStyle(BOLD);
+                textSize(12);
+                text('⚡ IMPACT! All energy is kinetic!', 0, 220);
+                text('K = ' + E_total_calc.toFixed(2) + ' J', 0, 237);
+                textStyle(NORMAL);
+            }
+            
+            pop();
+            
+            // Update sidebar info
+            updatePhysics();
+        }
+        
+        function updatePhysics() {
+            const U = mass * gravity * currentHeight;
+            const K = 0.5 * mass * currentVelocity * currentVelocity;
+            const E_total = mass * gravity * height;
+            
+            document.getElementById('hValue').textContent = currentHeight.toFixed(2);
+            document.getElementById('vValue').textContent = currentVelocity.toFixed(2);
+            document.getElementById('gValue').textContent = gravity.toFixed(1);
+            
+            const uPercent = E_total > 0 ? (U / E_total * 100).toFixed(0) : 0;
+            const kPercent = E_total > 0 ? (K / E_total * 100).toFixed(0) : 0;
+            
+            document.getElementById('uPercent').textContent = uPercent + '%';
+            document.getElementById('kPercent').textContent = kPercent + '%';
+            
+            document.getElementById('uFill').style.width = uPercent + '%';
+            document.getElementById('uFill').textContent = U > 0.5 ? U.toFixed(1) + ' J' : '';
+            
+            document.getElementById('kFill').style.width = kPercent + '%';
+            document.getElementById('kFill').textContent = K > 0.5 ? K.toFixed(1) + ' J' : '';
+            
+            document.getElementById('eTotal').textContent = E_total.toFixed(2) + ' J';
+            document.getElementById('eFill').style.width = '100%';
+        }
+        
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            const playBtn = document.querySelector('.button-group button:first-child');
+            if (isAnimating) {
+                playBtn.textContent = '⏸ Pause';
+            } else {
+                playBtn.textContent = '▶ Play';
+            }
+        }
+        
+        function resetAnimation() {
+            currentHeight = height;
+            currentVelocity = 0;
+            timeElapsed = 0;
+            isAnimating = true;
+            const playBtn = document.querySelector('.button-group button:first-child');
+            playBtn.textContent = '⏸ Pause';
+        }
+        
+        // Window resize handling
+        window.addEventListener('resize', () => {
+            if (width > 800 || height > 600) {
+                resizeCanvas(800, 600);
+            }
+        });
+    </script>
+</body>
+</html>

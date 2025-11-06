@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHYS1100 | Conservation of Momentum (Explosion)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background-color: #1a202c;
+        }
+        .p5Canvas {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        /* Custom slider styles */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #2d3748;
+            border-radius: 5px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #4fd1c5;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]:focus::-webkit-slider-runnable-track {
+            background: #4a5568;
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #2d3748;
+            border-radius: 5px;
+        }
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #4fd1c5;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center h-screen">
+
+    <div class="flex flex-row w-full max-w-7xl mx-auto p-4 gap-6">
+
+        <!-- Left Sidebar -->
+        <div id="sidebar" class="w-1/3 bg-teal-800/90 backdrop-blur-sm p-6 rounded-xl shadow-2xl h-[650px] overflow-y-auto">
+            <h1 class="text-3xl font-bold text-teal-200 border-b-2 border-teal-500 pb-2 mb-4">Explosion From Rest</h1>
+            <p class="text-sm text-teal-100 mb-6">Two boxes on a frictionless surface are pushed apart by an explosion. The total momentum of the system remains zero.</p>
+
+            <!-- Controls -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-teal-200 mb-3">Box Properties</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="mass1Slider" class="flex justify-between text-teal-100">Mass 1 (m₁) <span id="mass1Value" class="font-mono text-white">1.0 kg</span></label>
+                        <input type="range" id="mass1Slider" min="0.5" max="5.0" value="1.0" step="0.1" class="w-full">
+                    </div>
+                    <div>
+                        <label for="mass2Slider" class="flex justify-between text-teal-100">Mass 2 (m₂) <span id="mass2Value" class="font-mono text-white">2.0 kg</span></label>
+                        <input type="range" id="mass2Slider" min="0.5" max="5.0" value="2.0" step="0.1" class="w-full">
+                    </div>
+                    <div>
+                        <label for="vFinal1Slider" class="flex justify-between text-teal-100">Box 1 Final Velocity (v₁f) <span id="vFinal1Value" class="font-mono text-white">-4.0 m/s</span></label>
+                        <input type="range" id="vFinal1Slider" min="1.0" max="8.0" value="4.0" step="0.1" class="w-full">
+                    </div>
+                </div>
+                <div class="flex space-x-2 mt-5">
+                    <button id="explodeBtn" class="bg-teal-500 hover:bg-teal-400 text-teal-900 font-bold py-2 px-4 rounded-lg w-full transition-colors">💥 Explode</button>
+                    <button id="resetBtn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg w-full transition-colors">Reset</button>
+                </div>
+            </div>
+
+            <!-- Physics Formulas -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-teal-200 mb-3">Governing Equations</h2>
+                <div class="bg-teal-900/50 p-4 rounded-lg space-y-2 text-teal-100 font-mono text-sm">
+                    <p>P_initial = 0</p>
+                    <p>P_final = m₁·v₁f + m₂·v₂f</p>
+                    <p>P_initial = P_final  &rarr;  m₁·v₁f + m₂·v₂f = 0</p>
+                    <p>v₂f = - (m₁·v₁f) / m₂</p>
+                </div>
+            </div>
+            
+            <!-- Calculated Values -->
+            <div>
+                <h2 class="text-xl font-semibold text-teal-200 mb-3">Calculated Results</h2>
+                <div class="bg-teal-900/50 p-4 rounded-lg space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-teal-100">Box 2 Final Velocity (v₂f):</span>
+                        <span id="vFinal2Result" class="font-mono text-xl text-white">2.00 m/s</span>
+                    </div>
+                     <hr class="border-teal-700">
+                    <div class="flex justify-between items-center">
+                        <span class="text-teal-100">Box 1 Momentum (p₁):</span>
+                        <span id="momentum1Result" class="font-mono text-lg text-white">-4.00 kg·m/s</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-teal-100">Box 2 Momentum (p₂):</span>
+                        <span id="momentum2Result" class="font-mono text-lg text-white">+4.00 kg·m/s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Simulation Canvas -->
+        <div id="canvas-container" class="w-2/3 flex flex-col items-center justify-center">
+             <!-- p5.js canvas will be inserted here -->
+        </div>
+
+    </div>
+
+    <script>
+        const sketch = (p) => {
+            // DOM Elements
+            let mass1Slider, mass2Slider, vFinal1Slider;
+            let mass1Value, mass2Value, vFinal1Value;
+            let vFinal2Result, momentum1Result, momentum2Result;
+            let explodeBtn, resetBtn;
+
+            // Physics & Sim Variables
+            let m1, m2, v1f, v2f;
+            let p1, p2;
+
+            // Animation State
+            let simState = 'idle'; // 'idle', 'exploding', 'moving'
+            let explosionTimer = 0;
+            const explosionDuration = 300; // ms
+            
+            // Box objects
+            let box1, box2;
+            const boxSize = 60;
+
+            p.setup = () => {
+                let canvas = p.createCanvas(800, 600);
+                canvas.parent('canvas-container');
+                p.frameRate(60);
+
+                // --- Connect to DOM ---
+                mass1Slider = p.select('#mass1Slider');
+                mass2Slider = p.select('#mass2Slider');
+                vFinal1Slider = p.select('#vFinal1Slider');
+
+                mass1Value = p.select('#mass1Value');
+                mass2Value = p.select('#mass2Value');
+                vFinal1Value = p.select('#vFinal1Value');
+                
+                vFinal2Result = p.select('#vFinal2Result');
+                momentum1Result = p.select('#momentum1Result');
+                momentum2Result = p.select('#momentum2Result');
+
+                explodeBtn = p.select('#explodeBtn');
+                resetBtn = p.select('#resetBtn');
+
+                // --- Event Listeners ---
+                mass1Slider.input(updateAll);
+                mass2Slider.input(updateAll);
+                vFinal1Slider.input(updateAll);
+                
+                explodeBtn.mousePressed(startExplosion);
+                resetBtn.mousePressed(resetSimulation);
+
+                // --- Initialize Objects ---
+                box1 = { x: 0, y: p.height / 2, vx: 0, color: p.color(217, 119, 6) }; // Orange
+                box2 = { x: 0, y: p.height / 2, vx: 0, color: p.color(22, 163, 74) }; // Green
+                
+                updateAll();
+            };
+
+            p.draw = () => {
+                drawSurface();
+                
+                updateSystem();
+                
+                drawBox(box1, m1);
+                drawBox(box2, m2);
+
+                if (simState === 'moving') {
+                    drawMomentumVectors();
+                } else if (simState === 'exploding') {
+                    drawExplosionEffect();
+                }
+
+                drawTotalMomentumDisplay();
+            };
+            
+            // --- MAIN LOGIC FUNCTIONS ---
+            
+            function updateSystem() {
+                if (simState === 'moving') {
+                    box1.x += box1.vx;
+                    box2.x += box2.vx;
+
+                    if (box1.x < -boxSize || box2.x > p.width + boxSize) {
+                        simState = 'idle';
+                    }
+                } else if (simState === 'exploding') {
+                    if (p.millis() - explosionTimer > explosionDuration) {
+                        simState = 'moving';
+                        const speedScale = 4;
+                        box1.vx = v1f * speedScale;
+                        box2.vx = v2f * speedScale;
+                    }
+                }
+            }
+            
+            function updateCalculations() {
+                m1 = parseFloat(mass1Slider.value());
+                m2 = parseFloat(mass2Slider.value());
+                v1f = -parseFloat(vFinal1Slider.value()); // Negative for leftward motion
+
+                // Conservation of Momentum: v2f = - (m1 * v1f) / m2
+                v2f = - (m1 * v1f) / m2;
+                
+                // Calculate momenta
+                p1 = m1 * v1f;
+                p2 = m2 * v2f;
+
+                // Update display
+                mass1Value.html(`${m1.toFixed(1)} kg`);
+                mass2Value.html(`${m2.toFixed(1)} kg`);
+                vFinal1Value.html(`${v1f.toFixed(1)} m/s`);
+                
+                vFinal2Result.html(`${v2f.toFixed(2)} m/s`);
+                momentum1Result.html(`${p1.toFixed(2)} kg·m/s`);
+                momentum2Result.html(`${p2.toFixed(2)} kg·m/s`);
+            }
+            
+            function updateAll() {
+                updateCalculations();
+                resetSimulation();
+            }
+
+            function startExplosion() {
+                if (simState === 'idle') {
+                    resetSimulation(); // Ensure positions are correct
+                    simState = 'exploding';
+                    explosionTimer = p.millis();
+                }
+            }
+
+            function resetSimulation() {
+                simState = 'idle';
+                box1.x = p.width / 2 - boxSize / 2;
+                box2.x = p.width / 2 + boxSize / 2;
+                box1.vx = 0;
+                box2.vx = 0;
+            }
+
+            // --- DRAWING FUNCTIONS ---
+
+            function drawSurface() {
+                p.background(241, 245, 249); // Light gray surface
+                p.noStroke();
+                p.fill(226, 232, 240);
+                p.rect(0, p.height/2 + boxSize/2, p.width, p.height/2 - boxSize/2);
+            }
+            
+            function drawExplosionEffect() {
+                let elapsed = p.millis() - explosionTimer;
+                let progress = elapsed / explosionDuration;
+                let alpha = p.map(p.sin(progress * p.PI), 0, 1, 0, 255);
+                let radius = p.map(progress, 0, 1, 0, 50);
+
+                p.push();
+                p.noStroke();
+                p.fill(255, 200, 0, alpha);
+                p.circle(p.width / 2, p.height / 2, radius * 2);
+                p.fill(255, 100, 0, alpha * 0.7);
+                p.circle(p.width / 2, p.height / 2, radius * 1.2);
+                p.pop();
+            }
+
+            function drawBox(box, mass) {
+                p.push();
+                p.translate(box.x, box.y);
+                p.rectMode(p.CENTER);
+                p.noStroke();
+
+                // 3D effect
+                let mainColor = box.color;
+                let highlightColor = p.lerpColor(mainColor, p.color(255), 0.2);
+                let shadowColor = p.lerpColor(mainColor, p.color(0), 0.3);
+
+                p.fill(shadowColor);
+                p.rect(5, 5, boxSize, boxSize, 5); // Shadow
+                p.fill(mainColor);
+                p.rect(0, 0, boxSize, boxSize, 5); // Main face
+                
+                p.fill(highlightColor);
+                p.beginShape();
+                p.vertex(-boxSize/2, -boxSize/2);
+                p.vertex(boxSize/2, -boxSize/2);
+                p.vertex(boxSize/2, -boxSize/2 + 5);
+                p.vertex(-boxSize/2 + 5, -boxSize/2 + 5);
+                p.endShape(p.CLOSE);
+
+                // Label
+                p.fill(255);
+                p.textSize(18);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.text(`${mass.toFixed(1)} kg`, 0, 0);
+                
+                p.pop();
+            }
+
+            function drawMomentumVectors() {
+                const vectorScale = 10;
+                const vectorLength = p.abs(p2 * vectorScale); // Lengths are equal!
+
+                // Box 1 vector (points left)
+                drawVector(box1.x, box1.y - 70, box1.x - vectorLength, box1.y - 70, box1.color, 'p₁');
+                
+                // Box 2 vector (points right)
+                drawVector(box2.x, box2.y - 70, box2.x + vectorLength, box2.y - 70, box2.color, 'p₂');
+            }
+
+            function drawVector(x1, y1, x2, y2, color, label) {
+                p.push();
+                p.stroke(color);
+                p.strokeWeight(4);
+                p.fill(color);
+                p.line(x1, y1, x2, y2);
+                
+                p.push();
+                p.translate(x2, y2);
+                let angle = p.atan2(y2 - y1, x2 - x1);
+                p.rotate(angle);
+                p.triangle(0, 0, -12, -6, -12, 6);
+                p.pop();
+
+                p.noStroke();
+                p.fill(p.lerpColor(color, p.color(0), 0.3));
+                p.textSize(16);
+                p.textStyle(p.BOLD);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.text(label, (x1 + x2) / 2, y1 - 10);
+                
+                p.pop();
+            }
+
+            function drawTotalMomentumDisplay() {
+                p.push();
+                p.noStroke();
+                p.fill(0, 0, 0, 50);
+                p.rect(p.width / 2 - 150, 10, 300, 40, 10);
+                
+                p.fill(10, 20, 30);
+                p.textSize(18);
+                p.textAlign(p.CENTER, p.CENTER);
+                let totalMomentum = p1 + p2;
+                p.text(`Total Momentum: ${totalMomentum.toFixed(2)} kg·m/s`, p.width / 2, 30);
+                p.pop();
+            }
+        };
+
+        new p5(sketch);
+    </script>
+</body>
+</html>

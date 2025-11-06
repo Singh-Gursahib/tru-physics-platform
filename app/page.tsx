@@ -1,27 +1,13 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Sparkles } from "lucide-react"
+import { SiteHeader } from "@/components/site-header"
+import { Sparkles, BookOpen } from "lucide-react"
 
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-foreground">TRU Physics</h1>
-              <p className="text-xs text-muted-foreground">Curriculum Platform</p>
-            </div>
-          </div>
-          <Button variant="outline" size="sm">
-            Sign In
-          </Button>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* Hero Section */}
       <main className="flex-1 flex items-center justify-center px-6 py-20">

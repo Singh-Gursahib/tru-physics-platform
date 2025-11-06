@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Work and Energy: Non-Conservative Force</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(to bottom, #ecf0f1, #d5dce0);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .page-header {
+      width: 100%;
+      max-width: 1400px;
+      margin-bottom: 20px;
+      background: white;
+      padding: 24px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .page-header h1 {
+      color: #2c3e50;
+      font-size: 28px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-header p {
+      color: #555;
+      line-height: 1.6;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .formula-box {
+      background: #f8f9fa;
+      border-left: 4px solid #3498db;
+      padding: 14px;
+      border-radius: 5px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #2c3e50;
+      line-height: 1.7;
+      margin-top: 10px;
+    }
+
+    .main-container {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      gap: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .sidebar {
+      flex: 0 0 320px;
+      background: linear-gradient(135deg, #2c5f7c 0%, #1e4d66 100%);
+      color: white;
+      padding: 24px;
+      overflow-y: auto;
+      max-height: 900px;
+    }
+
+    .sidebar h2 {
+      font-size: 16px;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid rgba(255,255,255,0.2);
+      padding-bottom: 10px;
+      color: #a0d5d8;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 8px;
+      color: #a0d5d8;
+    }
+
+    .slider-wrapper {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 6px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #4db8a8;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: background 0.2s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      background: #55d4c0;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #4db8a8;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: background 0.2s;
+    }
+
+    input[type="range"]::-moz-range-thumb:hover {
+      background: #55d4c0;
+    }
+
+    .value-display {
+      background: rgba(77, 184, 168, 0.3);
+      padding: 6px 10px;
+      border-radius: 4px;
+      min-width: 70px;
+      text-align: right;
+      font-weight: 600;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      color: #e0f2f1;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin: 22px 0;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #4db8a8;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    button:hover {
+      background: #3da396;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(77, 184, 168, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .info-section {
+      background: rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 18px;
+    }
+
+    .info-section h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #4db8a8;
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 8px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: #e0f2f1;
+    }
+
+    .info-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .info-label {
+      font-weight: 500;
+    }
+
+    .info-value {
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      color: #4db8a8;
+    }
+
+    .energy-bar-group {
+      margin-bottom: 10px;
+    }
+
+    .energy-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: #a0d5d8;
+      font-weight: 600;
+    }
+
+    .energy-bar {
+      width: 100%;
+      height: 22px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid rgba(77, 184, 168, 0.3);
+    }
+
+    .energy-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4db8a8, #6dd9d0);
+      transition: width 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
+      padding: 40px;
+      position: relative;
+      min-height: 700px;
+    }
+
+    canvas {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      background: white;
+      max-width: 100%;
+      height: auto;
+    }
+
+    @media (max-width: 1200px) {
+      .main-container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        flex: 1;
+        max-height: none;
+      }
+
+      .canvas-container {
+        min-height: 500px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .page-header h1 {
+        font-size: 22px;
+      }
+
+      .page-header {
+        padding: 16px;
+      }
+
+      .sidebar {
+        padding: 16px;
+      }
+
+      .main-container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-header">
+    <h1>🚴 Work & Energy: Non-Conservative Forces</h1>
+    <p>
+      <strong>Problem:</strong> Monica pulls her daughter Jessie in a bike trailer up a slope at constant external force. 
+      Explore how external forces add energy to the system using the <strong>work-energy theorem</strong>.
+    </p>
+    <div class="formula-box">
+      <strong>Work-Energy Theorem:</strong><br>
+      KE<sub>i</sub> + PE<sub>i</sub> + W<sub>ext</sub> = KE<sub>f</sub> + PE<sub>f</sub><br><br>
+      <strong>With PE<sub>i</sub> = 0 at bottom:</strong><br>
+      ½m·v<sub>i</sub>² + F<sub>pull</sub>·d = ½m·v<sub>f</sub>² + m·g·h
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="sidebar">
+      <h2>⚙️ Parameters</h2>
+
+      <div class="control-group">
+        <label>Total Mass (m)</label>
+        <div class="slider-wrapper">
+          <input type="range" id="massSlider" min="10" max="50" value="25" step="1">
+        </div>
+        <div class="value-display"><span id="massValue">25</span> kg</div>
+      </div>
+
+      <div class="control-group">
+        <label>Slope Height (h)</label>
+        <div class="slider-wrapper">
+          <input type="range" id="heightSlider" min="1" max="10" value="4.0" step="0.5">
+        </div>
+        <div class="value-display"><span id="heightValue">4.0</span> m</div>
+      </div>
+
+      <div class="control-group">
+        <label>Slope Distance (d)</label>
+        <div class="slider-wrapper">
+          <input type="range" id="distanceSlider" min="30" max="150" value="100" step="5">
+        </div>
+        <div class="value-display"><span id="distanceValue">100</span> m</div>
+      </div>
+
+      <div class="control-group">
+        <label>Pulling Force (F)</label>
+        <div class="slider-wrapper">
+          <input type="range" id="forceSlider" min="1" max="20" value="8" step="0.5">
+        </div>
+        <div class="value-display"><span id="forceValue">8.0</span> N</div>
+      </div>
+
+      <div class="control-group">
+        <label>Initial Velocity (v<sub>i</sub>)</label>
+        <div class="slider-wrapper">
+          <input type="range" id="velocitySlider" min="1" max="10" value="5.3" step="0.1">
+        </div>
+        <div class="value-display"><span id="velocityValue">5.3</span> m/s</div>
+      </div>
+
+      <div class="button-group">
+        <button id="playBtn">▶ Start</button>
+        <button id="resetBtn">⟲ Reset</button>
+      </div>
+
+      <div class="info-section">
+        <h3>📊 Energy Analysis</h3>
+        
+        <div class="energy-bar-group">
+          <div class="energy-bar-label">
+            <span>Initial KE</span>
+            <span id="keInitVal">0 J</span>
+          </div>
+          <div class="energy-bar">
+            <div class="energy-bar-fill" id="keInitBar" style="width: 20%;"></div>
+          </div>
+        </div>
+
+        <div class="energy-bar-group">
+          <div class="energy-bar-label">
+            <span>Potential Energy</span>
+            <span id="peVal">0 J</span>
+          </div>
+          <div class="energy-bar">
+            <div class="energy-bar-fill" id="peBar" style="width: 20%;"></div>
+          </div>
+        </div>
+
+        <div class="energy-bar-group">
+          <div class="energy-bar-label">
+            <span>Work by Force</span>
+            <span id="workVal">0 J</span>
+          </div>
+          <div class="energy-bar">
+            <div class="energy-bar-fill" id="workBar" style="width: 20%;"></div>
+          </div>
+        </div>
+
+        <div class="energy-bar-group">
+          <div class="energy-bar-label">
+            <span>Final KE</span>
+            <span id="keFinalVal">0 J</span>
+          </div>
+          <div class="energy-bar">
+            <div class="energy-bar-fill" id="keFinalBar" style="width: 20%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3>📈 Simulation Status</h3>
+        
+        <div class="info-row">
+          <span class="info-label">Distance:</span>
+          <span class="info-value"><span id="distTraveled">0.0</span> m</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Height:</span>
+          <span class="info-value"><span id="heightGained">0.00</span> m</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Velocity:</span>
+          <span class="info-value"><span id="currVel">5.3</span> m/s</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Final V:</span>
+          <span class="info-value"><span id="finalVel">-</span> m/s</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Total E:</span>
+          <span class="info-value"><span id="totalE">0</span> J</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-container" id="canvasContainer"></div>
+  </div>
+
+  <script>
+    let params = {
+      m: 25,
+      h: 4.0,
+      d: 100,
+      F_pull: 8.0,
+      v_i: 5.3,
+      v_f: 0
+    };
+
+    let state = {
+      isPlaying: false,
+      progress: 0,
+      duration: 4 // seconds
+    };
+
+    const g = 9.81;
+
+    function calculateFinalVelocity() {
+      const ke_i = 0.5 * params.m * params.v_i * params.v_i;
+      const pe_f = params.m * g * params.h;
+      const work = params.F_pull * params.d;
+      const ke_f = ke_i + work - pe_f;
+      params.v_f = ke_f > 0 ? Math.sqrt(2 * ke_f / params.m) : 0;
+    }
+
+    function updateDisplay() {
+      document.getElementById('massValue').textContent = params.m;
+      document.getElementById('heightValue').textContent = params.h.toFixed(1);
+      document.getElementById('distanceValue').textContent = params.d;
+      document.getElementById('forceValue').textContent = params.F_pull.toFixed(1);
+      document.getElementById('velocityValue').textContent = params.v_i.toFixed(1);
+
+      calculateFinalVelocity();
+
+      const ke_i = 0.5 * params.m * params.v_i * params.v_i;
+      const pe_f = params.m * g * params.h;
+      const work = params.F_pull * params.d;
+      const ke_f = 0.5 * params.m * params.v_f * params.v_f;
+      const maxE = Math.max(ke_i, pe_f, work, ke_f, 1);
+
+      document.getElementById('keInitVal').textContent = ke_i.toFixed(0) + ' J';
+      document.getElementById('peVal').textContent = pe_f.toFixed(0) + ' J';
+      document.getElementById('workVal').textContent = work.toFixed(0) + ' J';
+      document.getElementById('keFinalVal').textContent = ke_f.toFixed(0) + ' J';
+
+      document.getElementById('keInitBar').style.width = (ke_i / maxE * 100) + '%';
+      document.getElementById('peBar').style.width = (pe_f / maxE * 100) + '%';
+      document.getElementById('workBar').style.width = (work / maxE * 100) + '%';
+      document.getElementById('keFinalBar').style.width = (ke_f / maxE * 100) + '%';
+
+      document.getElementById('finalVel').textContent = params.v_f.toFixed(2);
+    }
+
+    function updateSimulation() {
+      const dist = state.progress * params.d;
+      const height = state.progress * params.h;
+      const v = params.v_i + state.progress * (params.v_f - params.v_i);
+      
+      document.getElementById('distTraveled').textContent = dist.toFixed(1);
+      document.getElementById('heightGained').textContent = height.toFixed(2);
+      document.getElementById('currVel').textContent = v.toFixed(2);
+
+      const ke_i = 0.5 * params.m * params.v_i * params.v_i;
+      const ke_f = 0.5 * params.m * params.v_f * params.v_f;
+      const pe_f = params.m * g * params.h;
+      const totalE = ke_i + pe_f;
+
+      document.getElementById('totalE').textContent = totalE.toFixed(0);
+    }
+
+    // Event listeners
+    document.getElementById('massSlider').addEventListener('input', e => {
+      params.m = parseFloat(e.target.value);
+      updateDisplay();
+    });
+
+    document.getElementById('heightSlider').addEventListener('input', e => {
+      params.h = parseFloat(e.target.value);
+      updateDisplay();
+    });
+
+    document.getElementById('distanceSlider').addEventListener('input', e => {
+      params.d = parseFloat(e.target.value);
+      updateDisplay();
+    });
+
+    document.getElementById('forceSlider').addEventListener('input', e => {
+      params.F_pull = parseFloat(e.target.value);
+      updateDisplay();
+    });
+
+    document.getElementById('velocitySlider').addEventListener('input', e => {
+      params.v_i = parseFloat(e.target.value);
+      document.getElementById('currVel').textContent = params.v_i.toFixed(2);
+      updateDisplay();
+    });
+
+    document.getElementById('playBtn').addEventListener('click', () => {
+      state.isPlaying = !state.isPlaying;
+      document.getElementById('playBtn').textContent = state.isPlaying ? '⏸ Pause' : '▶ Start';
+      if (state.isPlaying && state.progress >= 1) {
+        state.progress = 0;
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      state.isPlaying = false;
+      state.progress = 0;
+      document.getElementById('playBtn').textContent = '▶ Start';
+      updateSimulation();
+    });
+
+    // P5.js sketch
+    const sketch = (p) => {
+      p.setup = function() {
+        const container = document.getElementById('canvasContainer');
+        let w = container.clientWidth - 40;
+        let h = 600;
+        const maxWidth = 900;
+        w = Math.min(w, maxWidth);
+        
+        const canvas = p.createCanvas(w, h);
+        canvas.parent('canvasContainer');
+      };
+
+      p.draw = function() {
+        p.background(255);
+        
+        if (state.isPlaying) {
+          state.progress += p.deltaTime / 1000 / state.duration;
+          if (state.progress > 1) {
+            state.progress = 1;
+            state.isPlaying = false;
+            document.getElementById('playBtn').textContent = '▶ Start';
+          }
+          updateSimulation();
+        }
+
+        drawVisualization();
+      };
+
+      function drawVisualization() {
+        const padding = 60;
+        const w = p.width;
+        const h = p.height;
+        
+        // Ground and slope
+        const startX = padding;
+        const startY = h - padding;
+        const endX = w - padding;
+        const endY = padding + 60;
+
+        // Draw ground
+        p.stroke(150);
+        p.strokeWeight(2);
+        p.fill(200, 190, 170);
+        p.rect(startX - 10, startY, w - startX - padding + 10, 60);
+
+        // Draw slope
+        p.stroke(120, 100, 80);
+        p.strokeWeight(3);
+        p.fill(210, 180, 140);
+        p.line(startX, startY, endX, endY);
+
+        // Slope shading
+        p.fill(180, 150, 110);
+        p.quad(startX, startY, startX - 15, startY + 15, endX - 15, endY + 15, endX, endY);
+
+        // Position on slope
+        const t = Math.max(0, Math.min(1, state.progress));
+        const x = startX + t * (endX - startX);
+        const y = startY + t * (endY - startY);
+
+        // Draw trailer
+        const angle = Math.atan2(startY - endY, endX - startX);
+        p.push();
+        p.translate(x, y);
+        p.rotate(angle);
+        
+        // Trailer body
+        p.fill(255, 140, 80);
+        p.stroke(200, 100, 40);
+        p.strokeWeight(2);
+        p.rect(-25, -18, 50, 36);
+
+        // Wheels
+        p.fill(60, 60, 60);
+        p.noStroke();
+        p.circle(-18, 18, 10);
+        p.circle(18, 18, 10);
+
+        // Person
+        p.fill(220, 120, 100);
+        p.circle(0, -23, 12);
+
+        p.pop();
+
+        // Draw forces
+        p.push();
+        p.translate(x, y);
+
+        // Velocity vector (blue)
+        const v_current = params.v_i + t * (params.v_f - params.v_i);
+        p.stroke(30, 120, 220);
+        p.strokeWeight(3);
+        p.fill(100, 160, 255);
+        const vScale = v_current * 20;
+        const vx = Math.cos(angle) * vScale;
+        const vy = Math.sin(angle) * vScale;
+        p.line(0, -35, vx, -35 + vy);
+        p.circle(vx, -35 + vy, 4);
+        p.fill(30, 120, 220);
+        p.textSize(11);
+        p.textAlign(p.LEFT);
+        p.text('v=' + v_current.toFixed(1) + 'm/s', vx + 8, -35 + vy);
+
+        // Pulling force (green)
+        p.stroke(40, 180, 80);
+        p.strokeWeight(3);
+        p.fill(80, 220, 100);
+        const fScale = params.F_pull * 25;
+        const fx = Math.cos(angle) * fScale;
+        const fy = Math.sin(angle) * fScale;
+        p.line(0, 0, fx, fy);
+        p.circle(fx, fy, 5);
+        p.fill(40, 180, 80);
+        p.textSize(10);
+        p.text('F=' + params.F_pull.toFixed(1) + 'N', fx + 8, fy - 3);
+
+        // Weight (red)
+        p.stroke(220, 40, 40);
+        p.strokeWeight(3);
+        p.fill(255, 100, 100);
+        const wScale = (params.m * g) / 50;
+        p.line(0, 0, 0, wScale);
+        p.circle(0, wScale, 4);
+        p.fill(220, 40, 40);
+        p.textSize(10);
+        p.text('W=' + (params.m * g).toFixed(0) + 'N', 8, wScale / 2);
+
+        p.pop();
+
+        // Labels
+        p.fill(100, 100, 100);
+        p.textSize(12);
+        p.textAlign(p.LEFT);
+        p.text('Start', startX - 5, startY + 35);
+        p.text('End', endX - 25, endY - 15);
+
+        // Distance and height indicators
+        const midX = (startX + endX) / 2;
+        const midY = (startY + endY) / 2;
+        p.stroke(100, 100, 100);
+        p.strokeWeight(1);
+        p.line(endX + 10, endY, endX + 10, startY);
+        p.fill(100);
+        p.textSize(11);
+        p.text('h=' + params.h.toFixed(1) + 'm', endX + 15, (startY + endY) / 2);
+
+        // Energy info box
+        p.fill(255);
+        p.stroke(180);
+        p.strokeWeight(1);
+        p.rect(padding, padding - 50, 200, 45);
+        p.fill(50);
+        p.textSize(11);
+        p.textAlign(p.LEFT);
+        p.text('Energy: KE=' + (0.5 * params.m * v_current * v_current).toFixed(0) + 'J', padding + 8, padding - 32);
+      }
+
+      p.windowResized = function() {
+        if (document.getElementById('canvasContainer')) {
+          const container = document.getElementById('canvasContainer');
+          if (container.offsetWidth > 0) {
+            let w = container.clientWidth - 40;
+            const maxWidth = 900;
+            w = Math.min(w, maxWidth);
+            p.resizeCanvas(w, 600);
+          }
+        }
+      };
+    };
+
+    new p5(sketch);
+    updateDisplay();
+  </script>
+</body>
+</html>

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparing Momentum: Tricycle vs Truck</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            gap: 0;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            max-width: 1400px;
+            width: 100%;
+            height: 700px;
+        }
+        
+        .sidebar {
+            width: 380px;
+            background: linear-gradient(135deg, #1a1f36 0%, #0f1624 100%);
+            padding: 30px 25px;
+            overflow-y: auto;
+            color: #e0e7ff;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar h1 {
+            font-size: 20px;
+            margin-bottom: 24px;
+            color: #ffffff;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        
+        .formula-box {
+            background: rgba(99, 102, 241, 0.15);
+            border: 1.5px solid rgba(99, 102, 241, 0.4);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: center;
+            color: #c7d2fe;
+        }
+        
+        .formula-box strong {
+            color: #fbbf24;
+            font-size: 15px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .formula-box .equation {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #a5f3fc;
+            margin-top: 8px;
+        }
+        
+        .control-group {
+            margin-bottom: 24px;
+        }
+        
+        .control-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            height: 5px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #3b82f6, #10b981);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbbf24, #f97316);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
+            transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.6);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbbf24, #f97316);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
+            transition: all 0.2s ease;
+        }
+        
+        .value-display {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fbbf24;
+            min-width: 60px;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #1a1f36;
+        }
+        
+        button.play {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        button.play:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        button.reset {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        button.reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+        
+        .info-panel {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+            padding: 18px;
+            margin-top: 24px;
+        }
+        
+        .info-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 14px;
+            display: block;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            padding-bottom: 8px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 10px;
+            color: #cbd5e1;
+        }
+        
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-label {
+            color: #94a3b8;
+        }
+        
+        .info-value {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #a5f3fc;
+        }
+        
+        .winner {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        
+        .winner.tricycle {
+            background: rgba(168, 85, 247, 0.2);
+            color: #d8b4fe;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+        }
+        
+        .winner.truck {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+        
+        .canvas-container {
+            flex: 1;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-height: 300px;
+            }
+            
+            .canvas-container {
+                min-height: 600px;
+            }
+        }
+        
+        /* Scrollbar styling */
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>⚙️ Momentum Comparison</h1>
+            
+            <div class="formula-box">
+                <strong>📐 Momentum Formula</strong>
+                <div class="equation">p = m × v</div>
+                <p style="margin-top: 8px; font-size: 12px;">where m is mass (kg) and v is velocity (m/s)</p>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">Tricycle Velocity (m/s)</label>
+                <div class="slider-container">
+                    <input type="range" id="velocityTricycle" min="10" max="100" value="60" step="5">
+                    <div class="value-display" id="valueTricycle">60 m/s</div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">Truck Velocity (m/s)</label>
+                <div class="slider-container">
+                    <input type="range" id="velocityTruck" min="10" max="100" value="60" step="5">
+                    <div class="value-display" id="valueTruck">60 m/s</div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="play" id="playBtn">▶ Play</button>
+                <button class="reset" id="resetBtn">↻ Reset</button>
+            </div>
+            
+            <div class="info-panel">
+                <span class="info-title">📊 Real-Time Results</span>
+                
+                <div class="info-item">
+                    <span class="info-label">Tricycle (m₁)</span>
+                    <span class="info-value" id="massTricycle">1000 kg</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Tricycle (v₁)</span>
+                    <span class="info-value" id="velTricycleDisplay">60 m/s</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Tricycle (p₁)</span>
+                    <span class="info-value" id="momentumTricycle">60,000 kg·m/s</span>
+                </div>
+                
+                <hr style="border: none; border-top: 1px solid rgba(99, 102, 241, 0.2); margin: 12px 0;">
+                
+                <div class="info-item">
+                    <span class="info-label">Truck (m₂)</span>
+                    <span class="info-value" id="massTruck">3000 kg</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Truck (v₂)</span>
+                    <span class="info-value" id="velTruckDisplay">60 m/s</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Truck (p₂)</span>
+                    <span class="info-value" id="momentumTruck">180,000 kg·m/s</span>
+                </div>
+                
+                <div id="winnerDisplay" class="winner truck">🏆 Truck has greater momentum!</div>
+            </div>
+        </div>
+        
+        <div class="canvas-container" id="canvasContainer"></div>
+    </div>
+    
+    <script>
+        // Physics Constants
+        const TRICYCLE_MASS = 1000; // kg
+        const TRUCK_MASS = 3000; // kg
+        const SCALE = 0.5; // pixels per meter
+        const VEHICLE_WIDTH = 80;
+        const VEHICLE_HEIGHT = 50;
+        
+        // State
+        let state = {
+            velocityTricycle: 60,
+            velocityTruck: 60,
+            isPlaying: false,
+            positionTricycle: 0,
+            positionTruck: 0,
+            time: 0,
+            maxTime: 8
+        };
+        
+        // DOM Elements
+        const velocityTricycleSlider = document.getElementById('velocityTricycle');
+        const velocityTruckSlider = document.getElementById('velocityTruck');
+        const playBtn = document.getElementById('playBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const canvasContainer = document.getElementById('canvasContainer');
+        
+        // Update value displays
+        function updateDisplay() {
+            document.getElementById('valueTricycle').textContent = state.velocityTricycle + ' m/s';
+            document.getElementById('valueTruck').textContent = state.velocityTruck + ' m/s';
+            
+            document.getElementById('velTricycleDisplay').textContent = state.velocityTricycle + ' m/s';
+            document.getElementById('velTruckDisplay').textContent = state.velocityTruck + ' m/s';
+            
+            const momentumTricycle = TRICYCLE_MASS * state.velocityTricycle;
+            const momentumTruck = TRUCK_MASS * state.velocityTruck;
+            
+            document.getElementById('momentumTricycle').textContent = momentumTricycle.toLocaleString() + ' kg·m/s';
+            document.getElementById('momentumTruck').textContent = momentumTruck.toLocaleString() + ' kg·m/s';
+            
+            // Winner display
+            const winnerDisplay = document.getElementById('winnerDisplay');
+            if (momentumTruck > momentumTricycle) {
+                winnerDisplay.className = 'winner truck';
+                winnerDisplay.innerHTML = '🏆 Truck has greater momentum!<br><span style="font-size: 11px;">(' + (momentumTruck - momentumTricycle).toLocaleString() + ' kg·m/s more)';
+            } else if (momentumTricycle > momentumTruck) {
+                winnerDisplay.className = 'winner tricycle';
+                winnerDisplay.innerHTML = '🏆 Tricycle has greater momentum!<br><span style="font-size: 11px;">(' + (momentumTricycle - momentumTruck).toLocaleString() + ' kg·m/s more)';
+            } else {
+                winnerDisplay.className = 'winner truck';
+                winnerDisplay.innerHTML = '⚖️ Equal momentum!';
+            }
+        }
+        
+        // Event listeners
+        velocityTricycleSlider.addEventListener('input', (e) => {
+            state.velocityTricycle = parseFloat(e.target.value);
+            updateDisplay();
+        });
+        
+        velocityTruckSlider.addEventListener('input', (e) => {
+            state.velocityTruck = parseFloat(e.target.value);
+            updateDisplay();
+        });
+        
+        playBtn.addEventListener('click', () => {
+            state.isPlaying = !state.isPlaying;
+            playBtn.textContent = state.isPlaying ? '⏸ Pause' : '▶ Play';
+            playBtn.style.background = state.isPlaying 
+                ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
+                : 'linear-gradient(135deg, #10b981, #059669)';
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            state.isPlaying = false;
+            state.time = 0;
+            state.positionTricycle = 0;
+            state.positionTruck = 0;
+            playBtn.textContent = '▶ Play';
+            playBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        });
+        
+        // p5.js setup and draw
+        function setup() {
+            const width = canvasContainer.offsetWidth;
+            const height = canvasContainer.offsetHeight;
+            const canvas = createCanvas(width, height);
+            canvas.parent('canvasContainer');
+            updateDisplay();
+        }
+        
+        function draw() {
+            background(248, 250, 252);
+            
+            // Soft background gradient
+            for (let i = 0; i < height; i++) {
+                let alpha = map(i, 0, height, 0, 30);
+                stroke(99, 102, 241, alpha);
+                line(0, i, width, i);
+            }
+            
+            // Animation
+            if (state.isPlaying && state.time < state.maxTime) {
+                state.time += 0.016; // ~60 FPS
+                state.positionTricycle = state.velocityTricycle * state.time * SCALE;
+                state.positionTruck = state.velocityTruck * state.time * SCALE;
+            }
+            
+            // Draw track
+            drawTracks();
+            
+            // Draw vehicles
+            drawVehicle('tricycle', state.positionTricycle, height * 0.35);
+            drawVehicle('truck', state.positionTruck, height * 0.65);
+            
+            // Draw labels and info
+            drawLabels();
+            
+            // Draw momentum visualization
+            drawMomentumBars();
+        }
+        
+        function drawTracks() {
+            stroke(200, 200, 200);
+            strokeWeight(2);
+            line(50, height * 0.35 + VEHICLE_HEIGHT / 2 + 15, width - 50, height * 0.35 + VEHICLE_HEIGHT / 2 + 15);
+            line(50, height * 0.65 + VEHICLE_HEIGHT / 2 + 15, width - 50, height * 0.65 + VEHICLE_HEIGHT / 2 + 15);
+            
+            // Draw dashed lines
+            stroke(180, 180, 180);
+            strokeWeight(1);
+            for (let i = 50; i < width - 50; i += 30) {
+                line(i, height * 0.35 + VEHICLE_HEIGHT / 2 + 20, i + 15, height * 0.35 + VEHICLE_HEIGHT / 2 + 20);
+                line(i, height * 0.65 + VEHICLE_HEIGHT / 2 + 20, i + 15, height * 0.65 + VEHICLE_HEIGHT / 2 + 20);
+            }
+        }
+        
+        function drawVehicle(type, posX, posY) {
+            push();
+            translate(posX + 50, posY);
+            
+            if (type === 'tricycle') {
+                // Tricycle - light purple
+                fill(168, 85, 247, 220);
+                stroke(126, 34, 206, 255);
+                strokeWeight(2);
+                
+                // Body
+                rect(0, -VEHICLE_HEIGHT / 2, VEHICLE_WIDTH, VEHICLE_HEIGHT, 4);
+                
+                // Wheels
+                fill(80, 80, 80);
+                circle(VEHICLE_WIDTH * 0.25, VEHICLE_HEIGHT / 2 - 2, 18);
+                circle(VEHICLE_WIDTH * 0.75, VEHICLE_HEIGHT / 2 - 2, 18);
+                
+                // Cabin
+                fill(186, 85, 211, 200);
+                rect(VEHICLE_WIDTH * 0.1, -VEHICLE_HEIGHT / 2 + 5, VEHICLE_WIDTH * 0.3, VEHICLE_HEIGHT * 0.4, 3);
+                
+                // Label
+                fill(0, 0, 0);
+                textSize(11);
+                textAlign(CENTER);
+                textStyle(BOLD);
+                text('Tricycle', VEHICLE_WIDTH / 2, VEHICLE_HEIGHT / 2 + 35);
+                
+            } else if (type === 'truck') {
+                // Truck - blue
+                fill(59, 130, 246, 220);
+                stroke(37, 99, 235, 255);
+                strokeWeight(2);
+                
+                // Main cargo area
+                rect(0, -VEHICLE_HEIGHT / 2, VEHICLE_WIDTH * 0.7, VEHICLE_HEIGHT, 4);
+                
+                // Cabin
+                fill(30, 100, 200);
+                rect(VEHICLE_WIDTH * 0.65, -VEHICLE_HEIGHT / 2, VEHICLE_WIDTH * 0.35, VEHICLE_HEIGHT * 0.6, 3);
+                
+                // Windows
+                fill(200, 230, 255, 150);
+                rect(VEHICLE_WIDTH * 0.7, -VEHICLE_HEIGHT / 2 + 5, VEHICLE_WIDTH * 0.25, VEHICLE_HEIGHT * 0.3, 2);
+                
+                // Wheels
+                fill(80, 80, 80);
+                circle(VEHICLE_WIDTH * 0.2, VEHICLE_HEIGHT / 2 - 2, 20);
+                circle(VEHICLE_WIDTH * 0.5, VEHICLE_HEIGHT / 2 - 2, 20);
+                circle(VEHICLE_WIDTH * 0.9, VEHICLE_HEIGHT / 2 - 2, 18);
+                
+                // Label
+                fill(0, 0, 0);
+                textSize(11);
+                textAlign(CENTER);
+                textStyle(BOLD);
+                text('Truck', VEHICLE_WIDTH / 2, VEHICLE_HEIGHT / 2 + 35);
+            }
+            
+            pop();
+        }
+        
+        function drawLabels() {
+            fill(50, 50, 50);
+            textSize(13);
+            textAlign(LEFT);
+            textStyle(NORMAL);
+            
+            const momentumTricycle = TRICYCLE_MASS * state.velocityTricycle;
+            const momentumTruck = TRUCK_MASS * state.velocityTruck;
+            
+            // Tricycle info
+            text(`m₁ = ${TRICYCLE_MASS} kg`, 50, height * 0.35 - 45);
+            text(`v₁ = ${state.velocityTricycle} m/s`, 50, height * 0.35 - 25);
+            text(`p₁ = ${momentumTricycle.toLocaleString()} kg·m/s`, 50, height * 0.35 - 5);
+            
+            // Truck info
+            text(`m₂ = ${TRUCK_MASS} kg`, 50, height * 0.65 - 45);
+            text(`v₂ = ${state.velocityTruck} m/s`, 50, height * 0.65 - 25);
+            text(`p₂ = ${momentumTruck.toLocaleString()} kg·m/s`, 50, height * 0.65 - 5);
+        }
+        
+        function drawMomentumBars() {
+            const barX = width - 180;
+            const barY = height / 2;
+            const maxMomentum = 540000; // Max possible momentum
+            
+            const momentumTricycle = TRICYCLE_MASS * state.velocityTricycle;
+            const momentumTruck = TRUCK_MASS * state.velocityTruck;
+            
+            const barHeight1 = map(momentumTricycle, 0, maxMomentum, 0, 120);
+            const barHeight2 = map(momentumTruck, 0, maxMomentum, 0, 120);
+            
+            fill(200, 200, 200, 100);
+            noStroke();
+            rect(barX - 20, barY - 70, 40, 140, 6);
+            rect(barX + 40, barY - 70, 40, 140, 6);
+            
+            // Bars
+            fill(168, 85, 247, 200);
+            rect(barX - 20, barY - 70 + (140 - barHeight1), 40, barHeight1, 6);
+            
+            fill(59, 130, 246, 200);
+            rect(barX + 40, barY - 70 + (140 - barHeight2), 40, barHeight2, 6);
+            
+            // Labels
+            fill(100, 100, 100);
+            textSize(11);
+            textAlign(CENTER);
+            text('Tricycle', barX, barY + 90);
+            text('Truck', barX + 60, barY + 90);
+            
+            // Values
+            textSize(10);
+            fill(168, 85, 247);
+            text(momentumTricycle.toLocaleString(), barX, barY - 85);
+            fill(59, 130, 246);
+            text(momentumTruck.toLocaleString(), barX + 60, barY - 85);
+        }
+        
+        // Handle window resize
+        windowResized = function() {
+            if (canvasContainer) {
+                resizeCanvas(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
+            }
+        };
+    </script>
+</body>
+</html>

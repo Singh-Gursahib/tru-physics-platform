@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Simulation: Perfectly Inelastic Collision</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-8">
+
+    <div class="container w-full max-w-7xl flex gap-8">
+
+        <!-- Left Sidebar: Controls & Information -->
+        <div class="w-1/3 bg-teal-800/90 text-white rounded-xl shadow-2xl h-[650px] p-6 flex flex-col overflow-y-auto">
+            
+            <!-- 1. Title -->
+            <div class="mb-4 pb-2 border-b border-teal-500">
+                <h1 class="text-2xl font-bold text-teal-100">Perfectly Inelastic Collision</h1>
+            </div>
+
+            <!-- 2. Context -->
+            <div class="mb-4">
+                <p class="text-teal-200 text-sm leading-relaxed">
+                    This simulation demonstrates a perfectly inelastic collision, where two objects collide and stick together. In this scenario, momentum is conserved. The total momentum of the system before the collision is equal to the total momentum of the combined mass after the collision.
+                </p>
+            </div>
+
+            <!-- 3. Interactive Controls -->
+            <div class="mb-4 bg-teal-900/50 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold text-teal-100 mb-4">Interactive Controls</h2>
+                
+                <!-- Box 1 Controls -->
+                <div class="mb-4">
+                    <label for="m1" class="block text-sm font-medium text-teal-200">Box 1 Mass (m₁): <span id="m1-value" class="font-bold text-white">1.0</span> kg</label>
+                    <input type="range" id="m1" min="0.5" max="5" value="1" step="0.1" class="w-full h-2 bg-teal-600 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div class="mb-4">
+                    <label for="v1" class="block text-sm font-medium text-teal-200">Box 1 Velocity (v₁): <span id="v1-value" class="font-bold text-white">4.0</span> m/s</label>
+                    <input type="range" id="v1" min="-10" max="10" value="4" step="0.1" class="w-full h-2 bg-teal-600 rounded-lg appearance-none cursor-pointer">
+                </div>
+                
+                <!-- Box 2 Controls -->
+                <div class="mb-4 pt-2 border-t border-teal-700">
+                    <label for="m2" class="block text-sm font-medium text-teal-200">Box 2 Mass (m₂): <span id="m2-value" class="font-bold text-white">2.0</span> kg</label>
+                    <input type="range" id="m2" min="0.5" max="5" value="2" step="0.1" class="w-full h-2 bg-teal-600 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div class="mb-4">
+                    <label for="v2" class="block text-sm font-medium text-teal-200">Box 2 Velocity (v₂): <span id="v2-value" class="font-bold text-white">-2.0</span> m/s</label>
+                    <input type="range" id="v2" min="-10" max="10" value="-2" step="0.1" class="w-full h-2 bg-teal-600 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <button id="collideBtn" class="bg-teal-500 hover:bg-teal-400 text-teal-900 font-bold py-2 px-4 rounded transition-colors duration-200">Collide</button>
+                    <button id="resetBtn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded transition-colors duration-200">Reset</button>
+                    <button id="problemValuesBtn" class="col-span-2 bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-2 px-4 rounded transition-colors duration-200">Use Problem Values</button>
+                </div>
+            </div>
+
+            <!-- 4. Physics Formulas -->
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold text-teal-100 mb-2">Governing Equations</h2>
+                <div class="bg-gray-900/70 p-3 rounded-md font-mono text-teal-200 text-xs">
+                    <p>p = m * v  (Momentum)</p>
+                    <p>p_initial = m₁v₁ + m₂v₂</p>
+                    <p>p_final = (m₁ + m₂) * v_final</p>
+                    <p class="mt-2 text-white">v_final = (m₁v₁ + m₂v₂) / (m₁ + m₂)</p>
+                </div>
+            </div>
+
+            <!-- 5. Calculated Values / Results -->
+            <div class="flex-grow">
+                <h2 class="text-lg font-semibold text-teal-100 mb-2">Calculated Results</h2>
+                <div class="bg-gray-900/70 p-3 rounded-md font-mono text-sm space-y-2">
+                    <p class="text-blue-300">p₁ (Initial): <span id="p1-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="text-red-300">p₂ (Initial): <span id="p2-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="border-t border-teal-700 pt-2 text-teal-200">P_total (Initial): <span id="p-total-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="mt-2 text-yellow-300">v_final: <span id="v-final-calc" class="font-bold text-white float-right">...</span></p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Canvas Container -->
+        <div id="canvas-container" class="w-2/3 flex items-center justify-center">
+            <!-- p5.js canvas will be inserted here -->
+        </div>
+    </div>
+
+<script>
+let sketch = (p) => {
+    // --- Canvas & World Setup ---
+    const CANVAS_WIDTH = 800;
+    const CANVAS_HEIGHT = 600;
+    const PIXELS_PER_METER = 40; // Scale factor for converting meters to pixels
+    const GROUND_Y = CANVAS_HEIGHT - 100;
+
+    let box1, box2, combinedBox;
+    let simState = 'ready'; // 'ready', 'running', 'collided'
+    let box1Color, box2Color;
+
+    // --- Box Class ---
+    class Box {
+        constructor(mass, velocity, startX, color) {
+            this.m = mass;
+            this.v = velocity; // m/s
+            this.x = startX; // pixels
+            this.y = GROUND_Y;
+            this.baseWidth = 40;
+            this.width = this.baseWidth + this.m * 12;
+            this.height = this.width * 0.8;
+            this.color = color;
+        }
+
+        update(dt) {
+            this.x += this.v * PIXELS_PER_METER * dt;
+        }
+        
+        draw() {
+            p.push();
+            p.noStroke();
+            p.fill(this.color);
+            p.rectMode(p.CENTER);
+            p.rect(this.x, this.y - this.height / 2, this.width, this.height, 8);
+            
+            // Text for mass is now drawn without rotation
+            p.fill(0);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(16); // Slightly larger for clarity
+            p.text(`m = ${this.m.toFixed(1)} kg`, this.x, this.y - this.height / 2);
+            p.pop();
+        }
+    }
+
+    // --- p5.js Setup Function ---
+    p.setup = () => {
+        let canvas = p.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+        canvas.parent('canvas-container');
+        canvas.style('border', '1px solid #4A5568');
+        canvas.style('box-shadow', '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)');
+        
+        box1Color = p.color(59, 130, 246); // Blue
+        box2Color = p.color(239, 68, 68);  // Red
+        
+        initializeSimulation();
+        attachEventListeners();
+        updateCalculations();
+    };
+
+    // --- p5.js Draw Loop ---
+    p.draw = () => {
+        p.background(241, 245, 249); // bg-slate-100
+        drawGround();
+        drawStatusBar();
+        
+        let dt = p.deltaTime / 1000; // time since last frame in seconds
+
+        if (simState === 'running') {
+            box1.update(dt);
+            box2.update(dt);
+            
+            drawBoxWithVectors(box1);
+            drawBoxWithVectors(box2);
+
+            // Collision detection
+            if (box1.x + box1.width/2 >= box2.x - box2.width/2) {
+                simState = 'collided';
+            }
+        } else if (simState === 'ready') {
+            drawBoxWithVectors(box1);
+            drawBoxWithVectors(box2);
+        } else if (simState === 'collided') {
+            combinedBox.update(dt);
+            drawCombinedBoxWithVectors(combinedBox);
+        }
+    };
+
+    // --- Simulation Logic ---
+    function initializeSimulation() {
+        simState = 'ready';
+        let m1 = parseFloat(document.getElementById('m1').value);
+        let v1 = parseFloat(document.getElementById('v1').value);
+        let m2 = parseFloat(document.getElementById('m2').value);
+        let v2 = parseFloat(document.getElementById('v2').value);
+
+        box1 = new Box(m1, v1, CANVAS_WIDTH * 0.2, box1Color);
+        box2 = new Box(m2, v2, CANVAS_WIDTH * 0.8, box2Color);
+
+        // Calculate combined box properties for post-collision
+        let combinedMass = m1 + m2;
+        let finalVelocity = (m1 * v1 + m2 * v2) / combinedMass;
+        let combinedColor = p.lerpColor(box1Color, box2Color, m2 / combinedMass);
+        let collisionPointX = (box1.x * m1 + box2.x * m2) / combinedMass; // Center of mass
+        
+        combinedBox = new Box(combinedMass, finalVelocity, collisionPointX, combinedColor);
+        // Approximation for combined size
+        combinedBox.width = box1.width * 0.8 + box2.width * 0.8; 
+        combinedBox.height = p.max(box1.height, box2.height);
+    }
+    
+    function startSimulation() {
+        if (simState === 'ready') {
+            simState = 'running';
+        }
+    }
+
+    function setProblemValues() {
+        document.getElementById('m1').value = 1.0;
+        document.getElementById('v1').value = 4.0;
+        document.getElementById('m2').value = 2.0;
+        document.getElementById('v2').value = -2.0;
+        updateAllSliderDisplays();
+        updateCalculations();
+        initializeSimulation();
+    }
+    
+    // --- Drawing Helpers ---
+    function drawGround() {
+        p.stroke(100);
+        p.strokeWeight(2);
+        p.line(0, GROUND_Y, CANVAS_WIDTH, GROUND_Y);
+    }
+
+    function drawStatusBar() {
+        p.push();
+        p.fill(50, 50, 50, 200);
+        p.noStroke();
+        p.rect(0, 0, CANVAS_WIDTH, 30);
+        p.fill(255);
+        p.textSize(16);
+        p.textAlign(p.LEFT, p.CENTER);
+        let statusText = "Ready";
+        if (simState === 'running') statusText = "Collision in progress...";
+        if (simState === 'collided') statusText = `Collision complete! Final velocity: ${combinedBox.v.toFixed(2)} m/s`;
+        p.text(`Status: ${statusText}`, 10, 15);
+        p.pop();
+    }
+
+    function drawBoxWithVectors(box) {
+        box.draw();
+        
+        // Scale vector length proportionally. Max magnitude is 10 m/s * 10 = 100 pixels.
+        const VELOCITY_SCALE = 10;
+        const MOMENTUM_SCALE = 5;
+        
+        // Velocity vector (above)
+        let vMag = box.v * VELOCITY_SCALE;
+        let vLabel = `v = ${box.v.toFixed(1)} m/s`;
+        drawVector(box.x, box.y - box.height - 20, vMag, vLabel, p.color(34, 197, 94)); // Green
+        
+        // Momentum vector (below)
+        let pMag = (box.m * box.v) * MOMENTUM_SCALE;
+        let pLabel = `p = ${(box.m * box.v).toFixed(1)} kg·m/s`;
+        drawVector(box.x, box.y + 20, pMag, pLabel, p.color(168, 85, 247)); // Purple
+    }
+    
+    function drawCombinedBoxWithVectors(box) {
+        box.draw();
+        
+        const VELOCITY_SCALE = 10;
+        const MOMENTUM_SCALE = 5;
+
+        // Final Velocity vector
+        let vMag = box.v * VELOCITY_SCALE;
+        let vLabel = `v_f = ${box.v.toFixed(1)} m/s`;
+        drawVector(box.x, box.y - box.height - 20, vMag, vLabel, p.color(234, 179, 8)); // Yellow
+        
+        // Final Momentum vector
+        let pMag = (box.m * box.v) * MOMENTUM_SCALE;
+        let pLabel = `p_f = ${(box.m * box.v).toFixed(1)} kg·m/s`;
+        drawVector(box.x, box.y + 20, pMag, pLabel, p.color(168, 85, 247));
+    }
+
+    /**
+     * Draws a vector (line and arrowhead) and its label.
+     * The key fix is here: removing the rotation (`p.rotate(angle)`) so the text stays upright.
+     * Instead, we use `p.textAlign` to position the text correctly relative to the vector direction.
+     */
+    function drawVector(x, y, mag, label, vColor) {
+        p.push();
+        p.stroke(vColor);
+        p.strokeWeight(2.5);
+        p.fill(vColor);
+        
+        let startX = x;
+        let endX = x + mag;
+        
+        // Line
+        p.line(startX, y, endX, y);
+        
+        // Arrowhead position based on direction
+        let arrowTipX = endX;
+        let direction = mag >= 0 ? 1 : -1;
+
+        // Draw Arrowhead
+        p.triangle(
+            arrowTipX, y,
+            arrowTipX - 8 * direction, y - 4,
+            arrowTipX - 8 * direction, y + 4
+        );
+
+        // Draw Label (Fixed text orientation)
+        p.noStroke();
+        p.fill(50);
+        p.textSize(12);
+        
+        // Position the text above the vector line.
+        // If vector goes right (mag > 0), text aligns to the right edge.
+        // If vector goes left (mag < 0), text aligns to the left edge.
+        if (mag >= 0) {
+            p.textAlign(p.RIGHT, p.BOTTOM);
+            p.text(label, endX, y - 5);
+        } else {
+            p.textAlign(p.LEFT, p.BOTTOM);
+            p.text(label, endX, y - 5);
+        }
+
+        p.pop();
+    }
+    
+    // --- UI Interaction ---
+    function attachEventListeners() {
+        document.getElementById('m1').addEventListener('input', handleSliderChange);
+        document.getElementById('v1').addEventListener('input', handleSliderChange);
+        document.getElementById('m2').addEventListener('input', handleSliderChange);
+        document.getElementById('v2').addEventListener('input', handleSliderChange);
+        document.getElementById('collideBtn').addEventListener('click', startSimulation);
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            initializeSimulation();
+            updateCalculations();
+        });
+        document.getElementById('problemValuesBtn').addEventListener('click', setProblemValues);
+    }
+    
+    function handleSliderChange(e) {
+        document.getElementById(`${e.target.id}-value`).textContent = parseFloat(e.target.value).toFixed(1);
+        updateCalculations();
+        if (simState !== 'running') {
+            initializeSimulation();
+        }
+    }
+
+    function updateAllSliderDisplays() {
+        document.getElementById('m1-value').textContent = parseFloat(document.getElementById('m1').value).toFixed(1);
+        document.getElementById('v1-value').textContent = parseFloat(document.getElementById('v1').value).toFixed(1);
+        document.getElementById('m2-value').textContent = parseFloat(document.getElementById('m2').value).toFixed(1);
+        document.getElementById('v2-value').textContent = parseFloat(document.getElementById('v2').value).toFixed(1);
+    }
+    
+    function updateCalculations() {
+        let m1 = parseFloat(document.getElementById('m1').value);
+        let v1 = parseFloat(document.getElementById('v1').value);
+        let m2 = parseFloat(document.getElementById('m2').value);
+        let v2 = parseFloat(document.getElementById('v2').value);
+
+        let p1 = m1 * v1;
+        let p2 = m2 * v2;
+        let pTotal = p1 + p2;
+        let vFinal = (m1 + m2) !== 0 ? pTotal / (m1 + m2) : 0;
+
+        document.getElementById('p1-calc').textContent = `${p1.toFixed(2)} kg·m/s`;
+        document.getElementById('p2-calc').textContent = `${p2.toFixed(2)} kg·m/s`;
+        document.getElementById('p-total-calc').textContent = `${pTotal.toFixed(2)} kg·m/s`;
+        document.getElementById('v-final-calc').textContent = `${vFinal.toFixed(2)} m/s`;
+    }
+};
+
+// Instantiate p5.js
+let p5_instance = new p5(sketch);
+
+</script>
+</body>
+</html>

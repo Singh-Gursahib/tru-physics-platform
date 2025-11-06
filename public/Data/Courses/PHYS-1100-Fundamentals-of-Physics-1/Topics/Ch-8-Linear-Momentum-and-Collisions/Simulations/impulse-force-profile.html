@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHYS1100 | Impulse and Force Profile of a Collision</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background-color: #1a202c;
+        }
+        .p5Canvas {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        /* Custom slider styles */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #2d3748;
+            border-radius: 5px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #4fd1c5;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]:focus::-webkit-slider-runnable-track {
+            background: #4a5568;
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #2d3748;
+            border-radius: 5px;
+        }
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #4fd1c5;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center h-screen">
+
+    <div class="flex flex-row w-full max-w-7xl mx-auto p-4 gap-6">
+
+        <!-- Left Sidebar -->
+        <div id="sidebar" class="w-1/3 bg-teal-800/90 backdrop-blur-sm p-6 rounded-xl shadow-2xl h-[650px] overflow-y-auto">
+            <h1 class="text-3xl font-bold text-teal-200 border-b-2 border-teal-500 pb-2 mb-4">Impulse & Collisions</h1>
+            <p class="text-sm text-teal-100 mb-6">Explore how the change in momentum (impulse) relates to the forces during a brief collision.</p>
+
+            <!-- Controls -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-teal-200 mb-3">Simulation Controls</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="massSlider" class="flex justify-between text-teal-100">Mass (m) <span id="massValue" class="font-mono text-white">150 g</span></label>
+                        <input type="range" id="massSlider" min="50" max="250" value="150" step="1" class="w-full">
+                    </div>
+                    <div>
+                        <label for="vInitialSlider" class="flex justify-between text-teal-100">Initial Velocity (vᵢ) <span id="vInitialValue" class="font-mono text-white">-20.0 m/s</span></label>
+                        <input type="range" id="vInitialSlider" min="10" max="50" value="20" step="0.5" class="w-full">
+                    </div>
+                    <div>
+                        <label for="vFinalSlider" class="flex justify-between text-teal-100">Final Velocity (v₟) <span id="vFinalValue" class="font-mono text-white">40.0 m/s</span></label>
+                        <input type="range" id="vFinalSlider" min="10" max="60" value="40" step="0.5" class="w-full">
+                    </div>
+                    <div>
+                        <label for="impactDurationSlider" class="flex justify-between text-teal-100">Impact Duration (Δt) <span id="impactDurationValue" class="font-mono text-white">0.60 ms</span></label>
+                        <input type="range" id="impactDurationSlider" min="0.1" max="2.0" value="0.6" step="0.05" class="w-full">
+                    </div>
+                </div>
+                <div class="flex space-x-2 mt-5">
+                    <button id="playBtn" class="bg-teal-500 hover:bg-teal-400 text-teal-900 font-bold py-2 px-4 rounded-lg w-full transition-colors">Play Simulation</button>
+                    <button id="resetBtn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg w-full transition-colors">Reset</button>
+                </div>
+            </div>
+
+            <!-- Physics Formulas -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-teal-200 mb-3">Physics Equations</h2>
+                <div class="bg-teal-900/50 p-4 rounded-lg space-y-2 text-teal-100 font-mono text-sm">
+                    <p>Δp = m ⋅ (v₟ − vᵢ)</p>
+                    <p>J = Δp</p>
+                    <p>J = Area = ½ ⋅ Δt ⋅ Fₘₐₓ</p>
+                    <p>Fₐᵥ₉ = J / Δt = ½ ⋅ Fₘₐₓ</p>
+                </div>
+            </div>
+            
+            <!-- Calculated Values -->
+            <div>
+                <h2 class="text-xl font-semibold text-teal-200 mb-3">Calculated Values</h2>
+                <div class="bg-teal-900/50 p-4 rounded-lg space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-teal-100">Impulse (J):</span>
+                        <span id="impulseResult" class="font-mono text-xl text-white">9.00 N·s</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-teal-100">Max Force (Fₘₐₓ):</span>
+                        <span id="maxForceResult" class="font-mono text-xl text-white">30.00 kN</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-teal-100">Average Force (Fₐᵥ₉):</span>
+                        <span id="avgForceResult" class="font-mono text-xl text-white">15.00 kN</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Simulation Canvas -->
+        <div id="canvas-container" class="w-2/3 flex flex-col items-center justify-center">
+             <!-- p5.js canvas will be inserted here -->
+        </div>
+
+    </div>
+
+    <script>
+        // Global p5.js sketch
+        const sketch = (p) => {
+            // DOM Elements
+            let massSlider, vInitialSlider, vFinalSlider, impactDurationSlider;
+            let massValue, vInitialValue, vFinalValue, impactDurationValue;
+            let impulseResult, maxForceResult, avgForceResult;
+            let playBtn, resetBtn;
+
+            // Physics & Sim Variables
+            let m, v_i, v_f, dt;
+            let J, F_max, F_avg;
+
+            // Animation State
+            let simState = 'idle'; // 'idle', 'approaching', 'collision', 'rebounding'
+            let statusText = 'Ready. Press Play.';
+            
+            // Ball and Bat properties
+            let ball, bat;
+            const ballRadius = 20;
+            const batWidth = 25;
+            const batHeight = 150;
+            const collisionAnimationDuration = 1000; // in ms
+            let collisionTimer = 0;
+
+            // Graph properties
+            let graph;
+            
+            p.setup = () => {
+                let canvas = p.createCanvas(800, 600);
+                canvas.parent('canvas-container');
+                p.frameRate(60);
+
+                // --- Connect to DOM ---
+                massSlider = p.select('#massSlider');
+                vInitialSlider = p.select('#vInitialSlider');
+                vFinalSlider = p.select('#vFinalSlider');
+                impactDurationSlider = p.select('#impactDurationSlider');
+
+                massValue = p.select('#massValue');
+                vInitialValue = p.select('#vInitialValue');
+                vFinalValue = p.select('#vFinalValue');
+                impactDurationValue = p.select('#impactDurationValue');
+                
+                impulseResult = p.select('#impulseResult');
+                maxForceResult = p.select('#maxForceResult');
+                avgForceResult = p.select('#avgForceResult');
+
+                playBtn = p.select('#playBtn');
+                resetBtn = p.select('#resetBtn');
+
+                // --- Event Listeners ---
+                massSlider.input(updateAll);
+                vInitialSlider.input(updateAll);
+                vFinalSlider.input(updateAll);
+                impactDurationSlider.input(updateAll);
+                
+                playBtn.mousePressed(playSimulation);
+                resetBtn.mousePressed(resetSimulation);
+
+                // --- Initialize Objects ---
+                bat = {
+                    x: 100,
+                    y: p.height / 4, // Y-center of the animation panel
+                    recoil: 0
+                };
+                
+                ball = {
+                    x: p.width, // Start off-screen right
+                    y: p.height / 4,
+                    vx: 0
+                };
+                
+                graph = {
+                    x: 50,
+                    y: p.height - 50,
+                    w: p.width - 100,
+                    h: 200,
+                    margin: 40
+                };
+                
+                // --- Initial Calculation ---
+                updateAll();
+                resetSimulation();
+            };
+
+            p.draw = () => {
+                p.background(247, 250, 252); // Light theme background
+                
+                drawAnimationScene();
+                drawGraphArea();
+                
+                updateSimulation();
+                
+                drawBat();
+                drawBall();
+                drawStatusBar();
+                
+                if (simState === 'collision') {
+                    drawLiveGraph();
+                } else if (simState === 'rebounding' || simState === 'idle') {
+                    drawCompletedGraph();
+                }
+            };
+            
+            // --- MAIN LOGIC FUNCTIONS ---
+            
+            function updateSimulation() {
+                const animationSpeedFactor = 5;
+                
+                switch(simState) {
+                    case 'approaching':
+                        ball.x += ball.vx;
+                        if (ball.x <= bat.x + batWidth / 2 + ballRadius) {
+                            simState = 'collision';
+                            statusText = '💥 COLLISION!';
+                            collisionTimer = p.millis();
+                            ball.x = bat.x + batWidth / 2 + ballRadius; // Snap to bat
+                        }
+                        break;
+                    case 'collision':
+                        let elapsed = p.millis() - collisionTimer;
+                        let progress = p.min(elapsed / collisionAnimationDuration, 1);
+                        
+                        // Bat recoil effect
+                        bat.recoil = p.sin(progress * p.PI) * 15;
+                        
+                        if (progress >= 1) {
+                            simState = 'rebounding';
+                            statusText = 'Ball Rebounding...';
+                            ball.vx = v_f / 10 * animationSpeedFactor;
+                        }
+                        break;
+                    case 'rebounding':
+                         ball.x += ball.vx;
+                         bat.recoil = 0; // Reset recoil
+                         if (ball.x > p.width + ballRadius) {
+                            resetSimulation();
+                            statusText = 'Simulation Finished. Reset.';
+                         }
+                        break;
+                }
+            }
+            
+            function updateCalculations() {
+                m = massSlider.value() / 1000; // kg
+                v_i = -parseFloat(vInitialSlider.value()); // m/s (negative)
+                v_f = parseFloat(vFinalSlider.value()); // m/s
+                dt = impactDurationSlider.value() / 1000; // s
+
+                // Δp = m * (v_f - v_i)
+                const delta_p = m * (v_f - v_i);
+                J = delta_p;
+                
+                // J = 1/2 * dt * F_max  => F_max = 2 * J / dt
+                F_max = (2 * J) / dt;
+                
+                // F_avg = J / dt
+                F_avg = J / dt;
+
+                // Update display
+                massValue.html(`${massSlider.value()} g`);
+                vInitialValue.html(`${v_i.toFixed(1)} m/s`);
+                vFinalValue.html(`${v_f.toFixed(1)} m/s`);
+                impactDurationValue.html(`${impactDurationSlider.value()} ms`);
+                
+                impulseResult.html(`${J.toFixed(2)} N·s`);
+                maxForceResult.html(`${(F_max / 1000).toFixed(2)} kN`);
+                avgForceResult.html(`${(F_avg / 1000).toFixed(2)} kN`);
+            }
+            
+            function updateAll() {
+                updateCalculations();
+                resetSimulation();
+            }
+
+            function playSimulation() {
+                if (simState === 'idle') {
+                    resetSimulation(); // Ensure positions are correct
+                    simState = 'approaching';
+                    statusText = 'Ball approaching bat...';
+                    ball.vx = v_i / 10 * 5; // Visual speed, not 1:1
+                }
+            }
+
+            function resetSimulation() {
+                simState = 'idle';
+                statusText = 'Ready. Press Play.';
+                ball.x = p.width - 50;
+                ball.y = p.height / 4;
+                ball.vx = 0;
+                bat.recoil = 0;
+            }
+
+            // --- DRAWING FUNCTIONS ---
+
+            function drawStatusBar() {
+                p.push();
+                p.fill(26, 32, 44, 200);
+                p.noStroke();
+                p.rect(0, 0, p.width, 30);
+                p.fill(255);
+                p.textSize(14);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.text(statusText, p.width / 2, 15);
+                p.pop();
+            }
+
+            function drawAnimationScene() {
+                p.push();
+                p.noStroke();
+                p.fill(237, 242, 247);
+                p.rect(0, 0, p.width, p.height / 2);
+                
+                // Ground line
+                p.stroke(200);
+                p.strokeWeight(2);
+                p.line(0, p.height / 4 + 60, p.width, p.height / 4 + 60);
+                p.pop();
+            }
+
+            function drawBat() {
+                p.push();
+                p.translate(bat.x + bat.recoil, bat.y);
+                p.fill(214, 158, 104); // Wood color
+                p.stroke(130, 81, 33);
+                p.strokeWeight(2);
+                p.rectMode(p.CENTER);
+                p.rect(0, 0, batWidth, batHeight, 5);
+                p.fill(192, 57, 43); // Red handle
+                p.rect(0, batHeight * 0.35, batWidth + 5, batHeight * 0.2, 5);
+                p.pop();
+            }
+
+            function drawBall() {
+                p.push();
+                p.translate(ball.x, ball.y);
+                
+                // Ball shadow
+                p.noStroke();
+                p.fill(0, 0, 0, 30);
+                p.ellipse(0, 60 - ballRadius, ballRadius * 2, ballRadius/2);
+
+                // Ball
+                p.fill(255);
+                p.stroke(200);
+                p.strokeWeight(1);
+                p.ellipse(0, 0, ballRadius * 2, ballRadius * 2);
+                
+                // Stitches
+                p.noFill();
+                p.stroke(220, 50, 50);
+                p.strokeWeight(2);
+                let stitchAngle = (simState === 'approaching' || simState === 'rebounding') ? (p.frameCount * ball.vx * 0.1) % p.TWO_PI : 0;
+                p.rotate(stitchAngle);
+                p.arc(0, 0, ballRadius * 1.5, ballRadius * 1.5, p.PI * 0.25, p.PI * 0.75);
+                p.arc(0, 0, ballRadius * 1.5, ballRadius * 1.5, p.PI * 1.25, p.PI * 1.75);
+                p.pop();
+            }
+
+            function drawGraphArea() {
+                p.push();
+                p.translate(graph.x, graph.y);
+                
+                // Axes
+                p.stroke(50);
+                p.strokeWeight(2);
+                p.line(0, 0, 0, -graph.h - graph.margin); // Y-axis
+                p.line(0, 0, graph.w + graph.margin, 0); // X-axis
+                
+                // Labels
+                p.noStroke();
+                p.fill(50);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.text("Time (ms)", graph.w / 2, 30);
+                p.push();
+                p.translate(-35, -graph.h / 2);
+                p.rotate(-p.HALF_PI);
+                p.text("Force (N)", 0, 0);
+                p.pop();
+
+                p.pop();
+            }
+            
+            function drawLiveGraph() {
+                 let elapsed = p.millis() - collisionTimer;
+                 let progress = p.min(elapsed / collisionAnimationDuration, 1);
+                 
+                 p.push();
+                 p.translate(graph.x, graph.y);
+                 
+                 let currentX = progress * graph.w;
+                 let currentY;
+                 
+                 // Triangular force profile
+                 if (progress < 0.5) {
+                    currentY = p.map(progress, 0, 0.5, 0, -graph.h);
+                 } else {
+                    currentY = p.map(progress, 0.5, 1, -graph.h, 0);
+                 }
+                 
+                 // Draw filled area (impulse)
+                 p.noStroke();
+                 p.fill(255, 100, 100, 150);
+                 p.beginShape();
+                 p.vertex(0, 0);
+                 if (progress < 0.5) {
+                    p.vertex(currentX, currentY);
+                 } else {
+                    p.vertex(graph.w / 2, -graph.h);
+                    p.vertex(currentX, currentY);
+                 }
+                 p.vertex(currentX, 0);
+                 p.endShape(p.CLOSE);
+
+                 p.pop();
+            }
+            
+            function drawCompletedGraph() {
+                p.push();
+                p.translate(graph.x, graph.y);
+
+                const F_max_Y = -graph.h;
+                const F_avg_Y = -graph.h / 2;
+                const max_F_val = F_max > 0 ? F_max : 1; // Avoid division by zero
+                const y_F_max_pos = p.map(F_max, 0, max_F_val, 0, F_max_Y);
+                const y_F_avg_pos = p.map(F_avg, 0, max_F_val, 0, F_max_Y);
+                
+                // Draw filled area for impulse
+                p.fill(255, 100, 100, 150);
+                p.noStroke();
+                p.beginShape();
+                p.vertex(0, 0);
+                p.vertex(graph.w / 2, y_F_max_pos);
+                p.vertex(graph.w, 0);
+                p.endShape(p.CLOSE);
+
+                // Draw F_max line and label
+                p.stroke(0, 150, 255, 200);
+                p.strokeWeight(2);
+                p.drawingContext.setLineDash([5, 5]);
+                p.line(0, y_F_max_pos, graph.w, y_F_max_pos);
+                p.noStroke();
+                p.fill(0, 150, 255);
+                p.textAlign(p.RIGHT, p.CENTER);
+                p.text(`Fₘₐₓ = ${(F_max / 1000).toFixed(2)} kN`, graph.w, y_F_max_pos - 10);
+                
+                // Draw F_avg line and label
+                p.stroke(255, 150, 0, 200);
+                p.line(0, y_F_avg_pos, graph.w, y_F_avg_pos);
+                p.noStroke();
+                p.fill(255, 150, 0);
+                p.text(`Fₐᵥ₉ = ${(F_avg / 1000).toFixed(2)} kN`, graph.w, y_F_avg_pos - 10);
+                
+                p.drawingContext.setLineDash([]); // Reset line dash
+                
+                // Draw Time labels
+                p.fill(50);
+                p.textAlign(p.CENTER, p.TOP);
+                p.text("0", 0, 5);
+                p.text((dt * 1000 / 2).toFixed(2), graph.w / 2, 5);
+                p.text((dt * 1000).toFixed(2), graph.w, 5);
+                
+                p.pop();
+            }
+        };
+
+        // Start p5.js
+        new p5(sketch);
+    </script>
+</body>
+</html>

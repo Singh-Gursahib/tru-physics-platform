@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Comparison: Students Climbing Stairs</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 1600px;
+            width: 100%;
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            padding: 25px;
+            border-radius: 8px;
+            color: white;
+            width: 380px;
+            font-size: 13px;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+        
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 22px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+        }
+        
+        .student-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .student-btn {
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            text-align: center;
+        }
+        
+        .student-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .student-btn.active {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            border-color: #ff6b6b;
+            box-shadow: 0 0 12px rgba(255, 107, 107, 0.5);
+        }
+        
+        .student-btn.active-b {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border-color: #4ecdc4;
+            box-shadow: 0 0 12px rgba(78, 205, 196, 0.5);
+        }
+        
+        .student-btn.active-c {
+            background: linear-gradient(135deg, #ffa500, #ff8c00);
+            border-color: #ffa500;
+            box-shadow: 0 0 12px rgba(255, 165, 0, 0.5);
+        }
+        
+        .student-btn.active-d {
+            background: linear-gradient(135deg, #b19cd9, #9370db);
+            border-color: #b19cd9;
+            box-shadow: 0 0 12px rgba(177, 156, 217, 0.5);
+        }
+        
+        .control-group {
+            margin-bottom: 16px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        button.control-btn {
+            flex: 1;
+            padding: 11px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        button.control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        button.control-btn.active {
+            background: #64b5f6;
+            border-color: #90caf9;
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 14px;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        
+        .info-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: #1565c0;
+            text-transform: uppercase;
+            border-bottom: 2px solid #bbdefb;
+            padding-bottom: 6px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            color: #222;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .info-value {
+            font-family: 'Courier New', monospace;
+            color: #1565c0;
+            font-weight: 600;
+        }
+        
+        .student-data-box {
+            background: linear-gradient(135deg, #f8f8f8, #f0f0f0);
+            border: 2px solid #d0d0d0;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 11px;
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .student-data-box.selected {
+            background: linear-gradient(135deg, #fff9e6, #fff4cc);
+            border-color: #ff9800;
+            box-shadow: 0 2px 6px rgba(255, 152, 0, 0.3);
+        }
+        
+        .student-data-header {
+            font-weight: 700;
+            font-size: 12px;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+            color: #0d47a1;
+        }
+        
+        .student-data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            color: #1a1a1a;
+            font-size: 11px;
+        }
+        
+        .student-data-item strong {
+            color: #1565c0;
+        }
+        
+        .formula-box {
+            background: rgba(100, 181, 246, 0.15);
+            border: 2px solid rgba(25, 118, 210, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 11px;
+            margin-top: 12px;
+        }
+        
+        .formula-box h4 {
+            margin: 0 0 8px 0;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        
+        .formula-box div {
+            margin: 4px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #ffffff;
+        }
+        
+        .power-ranking {
+            background: rgba(255, 215, 0, 0.15);
+            border: 2px solid rgba(255, 152, 0, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            color: #e65100;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+        
+        .power-ranking h4 {
+            margin: 0 0 10px 0;
+            color: #ff6f00;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+            font-size: 12px;
+        }
+        
+        .rank-item:last-child {
+            border-bottom: none;
+        }
+        
+        .rank-name {
+            font-weight: 600;
+        }
+        
+        .rank-value {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #ff6f00;
+        }
+        
+        .rank-medal {
+            margin-right: 6px;
+        }
+        
+        .canvas-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+        
+        #canvas {
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-text {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            max-width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px;
+            border-radius: 6px;
+        }
+        
+        .problem-context {
+            background: linear-gradient(135deg, #e3f2fd, #e1f5fe);
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #01579b;
+            border-left: 4px solid #1976d2;
+            margin-bottom: 12px;
+        }
+        
+        .problem-context strong {
+            color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>⚡ Power Comparison</h2>
+            
+            <div class="problem-context">
+                <strong>Scenario:</strong> Four students run up the stairs. Which student has the largest power output? 
+                <br><strong>Key:</strong> P = W/t = (mgh)/t
+            </div>
+            
+            <div class="student-selector">
+                <button class="student-btn active" id="btnA" onclick="selectStudent('A')">Student A</button>
+                <button class="student-btn" id="btnB" onclick="selectStudent('B')">Student B</button>
+                <button class="student-btn" id="btnC" onclick="selectStudent('C')">Student C</button>
+                <button class="student-btn" id="btnD" onclick="selectStudent('D')">Student D</button>
+            </div>
+            
+            <div class="button-group">
+                <button class="control-btn active" onclick="toggleAnimation()">▶ Play / ⏸ Pause</button>
+                <button class="control-btn" onclick="resetAnimation()">↻ Reset</button>
+            </div>
+            
+            <div class="info-panel">
+                <h3>📊 Current Data</h3>
+                <div class="info-row">
+                    <span class="info-label">Mass (m):</span>
+                    <span class="info-value" id="dispMass">80 kg</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Height (h):</span>
+                    <span class="info-value" id="dispHeight">10 m</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Time (t):</span>
+                    <span class="info-value" id="dispTime">10 s</span>
+                </div>
+                <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                <div class="info-row">
+                    <span class="info-label">Work (W = mgh):</span>
+                    <span class="info-value" id="dispWork">7840 J</span>
+                </div>
+                <div class="info-row" style="border-bottom: none; margin-top: 8px; padding-top: 8px; border-top: 2px solid #1976d2;">
+                    <span class="info-label"><strong>Power (P = W/t):</strong></span>
+                    <span class="info-value" style="font-size: 14px; color: #ff6f00;"><strong id="dispPower">784 W</strong></span>
+                </div>
+            </div>
+            
+            <div class="student-data-box" id="dataBoxA">
+                <div class="student-data-header">👤 Student A</div>
+                <div class="student-data-item"><strong>Mass:</strong> 80 kg</div>
+                <div class="student-data-item"><strong>Height:</strong> 10 m</div>
+                <div class="student-data-item"><strong>Time:</strong> 10 s</div>
+            </div>
+            
+            <div class="student-data-box" id="dataBoxB">
+                <div class="student-data-header">👤 Student B</div>
+                <div class="student-data-item"><strong>Mass:</strong> 80 kg</div>
+                <div class="student-data-item"><strong>Height:</strong> 10 m</div>
+                <div class="student-data-item"><strong>Time:</strong> 8 s</div>
+            </div>
+            
+            <div class="student-data-box" id="dataBoxC">
+                <div class="student-data-header">👤 Student C</div>
+                <div class="student-data-item"><strong>Mass:</strong> 64 kg</div>
+                <div class="student-data-item"><strong>Height:</strong> 10 m</div>
+                <div class="student-data-item"><strong>Time:</strong> 8 s</div>
+            </div>
+            
+            <div class="student-data-box" id="dataBoxD">
+                <div class="student-data-header">👤 Student D</div>
+                <div class="student-data-item"><strong>Mass:</strong> 80 kg</div>
+                <div class="student-data-item"><strong>Height:</strong> 20 m</div>
+                <div class="student-data-item"><strong>Time:</strong> 25 s</div>
+            </div>
+            
+            <div class="formula-box">
+                <h4>📐 Key Formulas</h4>
+                <div><strong>Work Done Against Gravity:</strong></div>
+                <div>W = mgh</div>
+                <div style="margin-top: 6px;"><strong>Power (rate of work):</strong></div>
+                <div>P = W/t = mgh/t</div>
+                <div style="margin-top: 6px;"><strong>Energy Transfer:</strong></div>
+                <div>ΔPE = mgh = Work done</div>
+            </div>
+            
+            <div class="power-ranking" id="rankingBox">
+                <h4>🏆 Power Rankings</h4>
+                <div class="rank-item">
+                    <span class="rank-name"><span class="rank-medal">🥇</span>Student B</span>
+                    <span class="rank-value">1000 W</span>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-name"><span class="rank-medal">🥈</span>Student D</span>
+                    <span class="rank-value">627 W</span>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-name"><span class="rank-medal">🥉</span>Student C</span>
+                    <span class="rank-value">784 W</span>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-name"><span class="rank-medal">4️⃣</span>Student A</span>
+                    <span class="rank-value">784 W</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-wrapper">
+            <div id="canvas-container"></div>
+            <div class="info-text">
+                <strong>Select a student</strong> to see their climb. <strong>Power</strong> determines how quickly they do work against gravity (P = mgh/t).
+                <br>Notice: Student B has the highest power, not because they climb highest or fastest alone, but the <strong>combination of mass, height, and time</strong> matters!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Student data
+        const students = {
+            A: { mass: 80, height: 10, time: 10, color: '#ff6b6b', name: 'Student A' },
+            B: { mass: 80, height: 10, time: 8, color: '#4ecdc4', name: 'Student B' },
+            C: { mass: 64, height: 10, time: 8, color: '#ffa500', name: 'Student C' },
+            D: { mass: 80, height: 20, time: 25, color: '#b19cd9', name: 'Student D' }
+        };
+        
+        const gravity = 9.8;
+        let selectedStudent = 'A';
+        let isAnimating = true;
+        let animationTime = 0;
+        let maxAnimationTime = 10; // seconds
+        
+        // P5.js setup
+        function setup() {
+            const canvas = createCanvas(950, 650).parent(document.getElementById('canvas-container'));
+            
+            // Calculate power rankings
+            updatePowerRanking();
+        }
+        
+        function draw() {
+            background(240, 248, 255);
+            
+            // Get selected student data
+            const student = students[selectedStudent];
+            const work = student.mass * gravity * student.height;
+            const power = work / student.time;
+            
+            // Update animation
+            if (isAnimating) {
+                animationTime += 0.016 / 1; // Adjust speed
+                if (animationTime > student.time + 0.5) {
+                    animationTime = student.time + 0.5;
+                }
+            }
+            
+            // Calculate current progress
+            const progress = Math.min(animationTime / student.time, 1);
+            const currentHeight = student.height * progress;
+            const currentWork = work * progress;
+            const averagePower = currentWork / Math.max(animationTime, 0.001);
+            
+            // Draw title
+            fill(13, 71, 161);
+            textSize(26);
+            textStyle(BOLD);
+            textAlign(CENTER);
+            text('Power Comparison: Climbing Stairs', 475, 35);
+            textStyle(NORMAL);
+            
+            // Draw stairs on the left - adjust position for Student D with 20m
+            let stairBaseY = 280;
+            let stairBaseX = 80;
+            
+            drawStaircase(stairBaseX, stairBaseY, student.height, student.color);
+            
+            // Draw climbing figure
+            drawClimbingStudent(stairBaseX, stairBaseY, currentHeight, student.color);
+            
+            // Draw energy/work conversion visualization
+            drawEnergyConversion(550, 80, currentWork, work, power, student.color);
+            
+            // Draw calculation panel
+            drawCalculationPanel(550, 320, student, work, power, currentWork, averagePower, animationTime, progress);
+            
+            // Update sidebar info
+            updateSidebarInfo(student, work, power);
+        }
+        
+        function drawStaircase(x, y, height, color) {
+            const stairWidth = 25;
+            const stairHeight = 12;
+            const numStairs = Math.ceil(height / 1.5);
+            
+            push();
+            stroke(100);
+            strokeWeight(2);
+            fill(220);
+            
+            for (let i = 0; i < numStairs; i++) {
+                const stairX = x + i * stairWidth;
+                const stairY = y - i * stairHeight;
+                
+                // Stair tread
+                fill(200);
+                stroke(120);
+                strokeWeight(1);
+                rect(stairX, stairY, stairWidth, stairHeight);
+                
+                // Stair highlight
+                stroke(240);
+                strokeWeight(1);
+                line(stairX, stairY, stairX + stairWidth, stairY);
+                
+                // Height marker every 5m
+                if ((i * 1.5) % 5 === 0 && i > 0) {
+                    fill(100);
+                    textSize(9);
+                    textAlign(RIGHT);
+                    text((i * 1.5).toFixed(0) + 'm', x - 8, stairY + 4);
+                }
+            }
+            
+            // Ground level
+            stroke(80);
+            strokeWeight(3);
+            fill(180);
+            rect(x - 10, y, numStairs * stairWidth + 20, 10);
+            
+            // Start position marker
+            fill(100);
+            textSize(10);
+            textAlign(RIGHT);
+            text('0m', x - 8, y + 8);
+            
+            pop();
+        }
+        
+        function drawClimbingStudent(x, y, currentHeight, color) {
+            push();
+            
+            // Approximate current position on stairs
+            const stairWidth = 25;
+            const stairHeight = 12;
+            const numStairs = currentHeight / 1.5;
+            
+            const posX = x + numStairs * stairWidth;
+            const posY = y - numStairs * stairHeight;
+            
+            // Body (circle)
+            fill(color);
+            stroke(0);
+            strokeWeight(2);
+            circle(posX, posY - 15, 14);
+            
+            // Head
+            fill(255, 200, 150);
+            stroke(0);
+            strokeWeight(1);
+            circle(posX, posY - 28, 10);
+            
+            // Body lines
+            stroke(0);
+            strokeWeight(2);
+            line(posX, posY - 8, posX, posY + 5);
+            
+            // Arms (climbing motion)
+            const armAngle = sin(frameCount * 0.05) * 0.5;
+            line(posX, posY - 5, posX - 8 + armAngle * 5, posY - 15 + armAngle * 10);
+            line(posX, posY - 5, posX + 8 - armAngle * 5, posY - 15 - armAngle * 10);
+            
+            // Legs
+            line(posX, posY + 5, posX - 5, posY + 20);
+            line(posX, posY + 5, posX + 5, posY + 20);
+            
+            // Path trail
+            stroke(color);
+            strokeWeight(1);
+            fill(color);
+            opacity = 100;
+            line(x, y, posX, posY - 15);
+            
+            pop();
+        }
+        
+        function drawEnergyConversion(x, y, currentWork, totalWork, power, color) {
+            push();
+            
+            // Title
+            fill(13, 71, 161);
+            textSize(14);
+            textStyle(BOLD);
+            textAlign(LEFT);
+            text('Work & Energy Transfer', x, y);
+            textStyle(NORMAL);
+            
+            // Work bar
+            fill(100);
+            textSize(11);
+            text('Work Done (W = mgh):', x, y + 28);
+            
+            // Work visualization
+            const barWidth = 180;
+            const barHeight = 28;
+            fill(220);
+            stroke(100);
+            strokeWeight(2);
+            rect(x, y + 36, barWidth, barHeight);
+            
+            const workRatio = totalWork > 0 ? currentWork / totalWork : 0;
+            fill(color);
+            rect(x, y + 36, barWidth * workRatio, barHeight);
+            
+            fill(0);
+            textSize(10);
+            textAlign(CENTER);
+            if (totalWork > 0) {
+                text(currentWork.toFixed(0) + ' / ' + totalWork.toFixed(0) + ' J', x + barWidth / 2, y + 56);
+            }
+            
+            // Work percentage
+            fill(13, 71, 161);
+            textSize(11);
+            textStyle(BOLD);
+            textAlign(RIGHT);
+            text((workRatio * 100).toFixed(0) + '%', x + barWidth + 12, y + 56);
+            textStyle(NORMAL);
+            
+            // Power display
+            fill(100);
+            textSize(11);
+            textAlign(LEFT);
+            text('Instantaneous Power:', x, y + 90);
+            
+            fill(255, 159, 64);
+            textSize(26);
+            textStyle(BOLD);
+            textAlign(LEFT);
+            text(power.toFixed(1) + ' W', x, y + 125);
+            textStyle(NORMAL);
+            
+            pop();
+        }
+        
+        function drawCalculationPanel(x, y, student, work, power, currentWork, avgPower, time, progress) {
+            push();
+            
+            // Title
+            fill(13, 71, 161);
+            textSize(13);
+            textStyle(BOLD);
+            textAlign(LEFT);
+            text('Calculation Details', x, y);
+            textStyle(NORMAL);
+            
+            const lineHeight = 18;
+            let currentY = y + 22;
+            
+            // Data
+            fill(50);
+            textSize(10);
+            
+            text('m = ' + student.mass + ' kg', x, currentY);
+            currentY += lineHeight;
+            
+            text('h = ' + student.height + ' m', x, currentY);
+            currentY += lineHeight;
+            
+            text('t = ' + student.time + ' s', x, currentY);
+            currentY += lineHeight;
+            
+            text('g = 9.8 m/s²', x, currentY);
+            currentY += lineHeight + 3;
+            
+            // Separator
+            stroke(150);
+            strokeWeight(1);
+            line(x, currentY - 3, x + 240, currentY - 3);
+            
+            currentY += 8;
+            
+            // Work calculation
+            fill(25, 118, 210);
+            textStyle(BOLD);
+            textSize(11);
+            text('Work (W = mgh):', x, currentY);
+            textStyle(NORMAL);
+            currentY += lineHeight;
+            
+            fill(50);
+            textSize(10);
+            text('W = ' + student.mass + ' × 9.8 × ' + student.height, x + 10, currentY);
+            currentY += lineHeight;
+            
+            fill(25, 118, 210);
+            textStyle(BOLD);
+            textSize(11);
+            text('W = ' + work.toFixed(1) + ' J', x + 10, currentY);
+            textStyle(NORMAL);
+            currentY += lineHeight + 5;
+            
+            // Separator
+            stroke(150);
+            strokeWeight(1);
+            line(x, currentY - 3, x + 240, currentY - 3);
+            
+            currentY += 8;
+            
+            // Power calculation
+            fill(255, 127, 14);
+            textStyle(BOLD);
+            textSize(11);
+            text('Power (P = W/t):', x, currentY);
+            textStyle(NORMAL);
+            currentY += lineHeight;
+            
+            fill(50);
+            textSize(10);
+            text('P = ' + work.toFixed(1) + ' / ' + student.time, x + 10, currentY);
+            currentY += lineHeight;
+            
+            fill(255, 127, 14);
+            textStyle(BOLD);
+            textSize(12);
+            text('P = ' + power.toFixed(1) + ' W', x + 10, currentY);
+            textStyle(NORMAL);
+            
+            pop();
+        }
+        
+        function selectStudent(studentId) {
+            selectedStudent = studentId;
+            animationTime = 0;
+            isAnimating = true;
+            
+            // Update button styles
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById('btn' + ['A', 'B', 'C', 'D'][i]);
+                btn.classList.remove('active', 'active-b', 'active-c', 'active-d');
+            }
+            
+            const selectedBtn = document.getElementById('btn' + studentId);
+            if (studentId === 'A') selectedBtn.classList.add('active');
+            else if (studentId === 'B') selectedBtn.classList.add('active-b');
+            else if (studentId === 'C') selectedBtn.classList.add('active-c');
+            else if (studentId === 'D') selectedBtn.classList.add('active-d');
+            
+            // Update data box highlighting
+            for (const box of ['A', 'B', 'C', 'D']) {
+                document.getElementById('dataBox' + box).classList.remove('selected');
+            }
+            document.getElementById('dataBox' + studentId).classList.add('selected');
+        }
+        
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            const playBtn = document.querySelector('.button-group button:first-child');
+            if (isAnimating) {
+                playBtn.textContent = '⏸ Pause';
+            } else {
+                playBtn.textContent = '▶ Play';
+            }
+        }
+        
+        function resetAnimation() {
+            animationTime = 0;
+            isAnimating = true;
+            const playBtn = document.querySelector('.button-group button:first-child');
+            playBtn.textContent = '⏸ Pause';
+        }
+        
+        function updateSidebarInfo(student, work, power) {
+            document.getElementById('dispMass').textContent = student.mass + ' kg';
+            document.getElementById('dispHeight').textContent = student.height + ' m';
+            document.getElementById('dispTime').textContent = student.time + ' s';
+            document.getElementById('dispWork').textContent = work.toFixed(0) + ' J';
+            document.getElementById('dispPower').textContent = power.toFixed(0) + ' W';
+        }
+        
+        function updatePowerRanking() {
+            const rankings = [];
+            
+            for (const [key, student] of Object.entries(students)) {
+                const work = student.mass * gravity * student.height;
+                const power = work / student.time;
+                rankings.push({
+                    name: student.name,
+                    power: power,
+                    key: key
+                });
+            }
+            
+            // Sort by power (descending)
+            rankings.sort((a, b) => b.power - a.power);
+            
+            // Update ranking box
+            const rankingBox = document.getElementById('rankingBox');
+            const medals = ['🥇', '🥈', '🥉', '4️⃣'];
+            
+            let html = '<h4>🏆 Power Rankings</h4>';
+            for (let i = 0; i < rankings.length; i++) {
+                html += `<div class="rank-item">
+                    <span class="rank-name"><span class="rank-medal">${medals[i]}</span>${rankings[i].name}</span>
+                    <span class="rank-value">${rankings[i].power.toFixed(0)} W</span>
+                </div>`;
+            }
+            
+            rankingBox.innerHTML = html;
+        }
+        
+        // Window resize handling
+        window.addEventListener('resize', () => {
+            if (width > 900 || height > 600) {
+                resizeCanvas(900, 600);
+            }
+        });
+    </script>
+</body>
+</html>

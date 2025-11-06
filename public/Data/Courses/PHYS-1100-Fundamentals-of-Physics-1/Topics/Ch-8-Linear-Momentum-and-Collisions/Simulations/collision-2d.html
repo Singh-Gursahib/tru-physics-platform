@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Simulation: 2D Collision</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-8">
+
+    <div class="container w-full max-w-7xl flex gap-8">
+
+        <!-- Left Sidebar: Controls & Information -->
+        <div class="w-1/3 bg-teal-800/90 text-white rounded-xl shadow-2xl h-[650px] p-6 flex flex-col overflow-y-auto">
+            
+            <!-- 1. Title -->
+            <div class="mb-4 pb-2 border-b border-teal-500">
+                <h1 class="text-2xl font-bold text-teal-100">2D Collision</h1>
+            </div>
+
+            <!-- 2. Context -->
+            <div class="mb-4">
+                <p class="text-teal-200 text-sm leading-relaxed">
+                    This simulation shows the conservation of momentum in two dimensions. A red chip strikes a stationary blue chip. The total momentum in the x-direction and the y-direction are conserved independently, allowing us to calculate the blue chip's final velocity.
+                </p>
+            </div>
+
+            <!-- 3. Controls & Given Data -->
+            <div class="mb-4 bg-teal-900/50 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold text-teal-100 mb-3">Given Data</h2>
+                <div class="font-mono text-sm space-y-1 text-teal-200">
+                    <p>Masses (mᵣ, mᵦ): <span class="font-bold text-white float-right">Equal (1 kg)</span></p>
+                    <p>vᵣ (initial): <span class="font-bold text-white float-right">5.00 m/s (x-dir)</span></p>
+                    <p>vᵦ (initial): <span class="font-bold text-white float-right">0.00 m/s</span></p>
+                    <p>vᵣ (final): <span class="font-bold text-white float-right">3.99 m/s @ 37.0°</span></p>
+                </div>
+                
+                <h2 class="text-lg font-semibold text-teal-100 mb-3 mt-5">Animation Controls</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="collideBtn" class="bg-teal-500 hover:bg-teal-400 text-teal-900 font-bold py-2 px-4 rounded transition-colors duration-200">Collide</button>
+                    <button id="resetBtn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded transition-colors duration-200">Reset</button>
+                </div>
+            </div>
+
+            <!-- 4. Physics Formulas -->
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold text-teal-100 mb-2">Governing Equations</h2>
+                <div class="bg-gray-900/70 p-3 rounded-md font-mono text-teal-200 text-xs space-y-2">
+                    <p class="text-white font-bold">// X-Momentum Conservation</p>
+                    <p>Σpᵢₓ = Σpբₓ</p>
+                    <p>mᵣvᵣᵢₓ = mᵣvᵣբₓ + mᵦvᵦբₓ</p>
+                    <p class="text-white font-bold pt-1">// Y-Momentum Conservation</p>
+                    <p>Σpᵢᵧ = Σpբᵧ = 0</p>
+                    <p>0 = mᵣvᵣբᵧ + mᵦvᵦբᵧ</p>
+                    <p class="text-white font-bold pt-1">// Kinetic Energy</p>
+                    <p>KE = ½mv²</p>
+                </div>
+            </div>
+
+            <!-- 5. Calculated Values / Results -->
+            <div class="flex-grow">
+                <h2 class="text-lg font-semibold text-teal-100 mb-2">Calculated Results</h2>
+                <div class="bg-gray-900/70 p-3 rounded-md font-mono text-sm space-y-2">
+                    <p class="text-blue-300">Blue Chip vբₓ: <span id="vbfx-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="text-blue-300">Blue Chip vբᵧ: <span id="vbfy-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="border-t border-teal-700 pt-2 mt-2 text-cyan-300">Blue Chip Speed: <span id="vbf-speed-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="text-cyan-300">Blue Chip Angle: <span id="vbf-angle-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="border-t border-teal-700 pt-2 mt-2 text-yellow-300">KE (Initial): <span id="kei-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="text-yellow-300">KE (Final): <span id="kef-calc" class="font-bold text-white float-right">...</span></p>
+                    <p class="text-center mt-2 text-lg text-teal-200" id="elastic-result">...</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Canvas Container -->
+        <div id="canvas-container" class="w-2/3 flex items-center justify-center">
+            <!-- p5.js canvas will be inserted here -->
+        </div>
+    </div>
+
+<script>
+let sketch = (p) => {
+    // --- Canvas & World Setup ---
+    const CANVAS_WIDTH = 800;
+    const CANVAS_HEIGHT = 600;
+    const PIXELS_PER_METER = 50;
+    
+    // --- Given Data ---
+    const M = 1.0; // mass is equal, so we can use 1kg for calculations
+    const V_RI_SPEED = 5.00;
+    const V_RF_SPEED = 3.99;
+    const THETA_RF_DEG = 37.0;
+    const THETA_RF_RAD = THETA_RF_DEG * Math.PI / 180;
+    
+    // --- Simulation State ---
+    let simState = 'ready'; // ready, running, collided
+    let redChip, blueChip;
+
+    // --- Calculated Physics Values ---
+    let v_rf_x, v_rf_y, v_bf_x, v_bf_y, v_bf_speed, theta_bf_deg;
+    let ke_initial, ke_final;
+
+    class Chip {
+        constructor(x, y, vx, vy, radius, color) {
+            this.pos = p.createVector(x, y);
+            this.vel = p.createVector(vx, vy);
+            this.radius = radius;
+            this.color = color;
+        }
+
+        update(dt) {
+            this.pos.add(p5.Vector.mult(this.vel, dt * PIXELS_PER_METER));
+        }
+
+        draw() {
+            p.noStroke();
+            p.fill(this.color);
+            p.circle(this.pos.x, this.pos.y, this.radius * 2);
+        }
+    }
+
+    p.setup = () => {
+        let canvas = p.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+        canvas.parent('canvas-container');
+        canvas.style('border', '1px solid #4A5568');
+        canvas.style('box-shadow', '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)');
+        
+        calculatePhysics();
+        initializeSimulation();
+        attachEventListeners();
+    };
+
+    p.draw = () => {
+        p.background(241, 245, 249); // bg-slate-100
+        drawGrid();
+        drawStatusBar();
+        drawMomentumTable();
+
+        let dt = p.deltaTime / 1000;
+
+        if (simState === 'running') {
+            redChip.update(dt);
+            // Collision detection
+            if (p5.Vector.dist(redChip.pos, blueChip.pos) <= redChip.radius + blueChip.radius) {
+                simState = 'collided';
+                // Set final velocities
+                redChip.vel.set(v_rf_x, v_rf_y); // Note: y is inverted for screen coordinates
+                blueChip.vel.set(v_bf_x, v_bf_y);
+                updateSidebarResults();
+            }
+        } else if (simState === 'collided') {
+            redChip.update(dt);
+            blueChip.update(dt);
+        }
+
+        // --- Drawing Chips and Vectors ---
+        redChip.draw();
+        blueChip.draw();
+
+        if (simState === 'ready' || simState === 'running') {
+            drawVector(redChip.pos, redChip.vel.copy().mult(M * 15), `pᵣᵢ`, p.color(239, 68, 68));
+        } else if (simState === 'collided') {
+            drawVector(redChip.pos, redChip.vel.copy().mult(M * 15), `pᵣբ`, p.color(239, 68, 68, 180));
+            drawVector(blueChip.pos, blueChip.vel.copy().mult(M * 15), `pᵦբ`, p.color(59, 130, 246, 180));
+        }
+    };
+    
+    function calculatePhysics() {
+        // Red chip final velocity components
+        v_rf_x = V_RF_SPEED * Math.cos(THETA_RF_RAD);
+        v_rf_y = V_RF_SPEED * Math.sin(THETA_RF_RAD); // Positive y is down in physics
+
+        // Conservation of Px: m*v_ri_x = m*v_rf_x + m*v_bf_x  => v_ri_x = v_rf_x + v_bf_x
+        v_bf_x = V_RI_SPEED - v_rf_x;
+        
+        // Conservation of Py: 0 = m*v_rf_y + m*v_bf_y => 0 = v_rf_y + v_bf_y
+        v_bf_y = -v_rf_y;
+
+        v_bf_speed = Math.sqrt(v_bf_x**2 + v_bf_y**2);
+        theta_bf_deg = (Math.atan2(v_bf_y, v_bf_x) * 180 / Math.PI);
+
+        // Kinetic Energy
+        ke_initial = 0.5 * M * V_RI_SPEED**2;
+        ke_final = 0.5 * M * V_RF_SPEED**2 + 0.5 * M * v_bf_speed**2;
+    }
+
+    function initializeSimulation() {
+        simState = 'ready';
+        redChip = new Chip(100, CANVAS_HEIGHT / 2, V_RI_SPEED, 0, 20, p.color(239, 68, 68));
+        blueChip = new Chip(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 0, 0, 20, p.color(59, 130, 246));
+        resetSidebarResults();
+    }
+
+    function drawGrid() {
+        p.stroke(200);
+        p.strokeWeight(0.5);
+        for (let x = 0; x < CANVAS_WIDTH; x += 50) {
+            p.line(x, 0, x, CANVAS_HEIGHT);
+        }
+        for (let y = 0; y < CANVAS_HEIGHT; y += 50) {
+            p.line(0, y, CANVAS_WIDTH, y);
+        }
+        // Axes
+        p.stroke(100);
+        p.strokeWeight(2);
+        const originX = CANVAS_WIDTH / 2;
+        const originY = CANVAS_HEIGHT / 2;
+        p.line(0, originY, CANVAS_WIDTH, originY); // x-axis
+        p.line(originX, 0, originX, CANVAS_HEIGHT); // y-axis
+        p.fill(0);
+        p.noStroke();
+        p.text('X', CANVAS_WIDTH - 20, originY - 10);
+        p.text('Y', originX + 10, 20);
+    }
+    
+    function drawStatusBar() {
+        let statusText = "Ready for collision.";
+        if (simState === 'running') statusText = "Red chip moving...";
+        if (simState === 'collided') statusText = "Collision complete!";
+        
+        p.push();
+        p.fill(50, 50, 50, 200);
+        p.noStroke();
+        p.rect(0, 0, CANVAS_WIDTH, 30);
+        p.fill(255);
+        p.textSize(16);
+        p.textAlign(p.LEFT, p.CENTER);
+        p.text(`Status: ${statusText}`, 10, 15);
+        p.pop();
+    }
+
+    function drawMomentumTable() {
+        p.push();
+        p.fill(0, 0, 0, 100);
+        p.noStroke();
+        p.rect(10, 40, 320, 110, 5);
+        
+        p.fill(255);
+        p.textFont('monospace');
+        p.textSize(12);
+        
+        let headers = ['Chip', 'pₓ (kg·m/s)', 'pᵧ (kg·m/s)'];
+        let y = 60;
+        let x_pos = [20, 130, 240];
+        p.textAlign(p.LEFT, p.CENTER);
+        for(let i=0; i<headers.length; i++) p.text(headers[i], x_pos[i], y);
+        p.stroke(255, 150);
+        p.line(15, y+10, 325, y+10);
+        p.noStroke();
+
+        let p_ri_x = M * V_RI_SPEED;
+        let p_ri_y = 0;
+        let p_rf_x = M * v_rf_x;
+        let p_rf_y = M * v_rf_y;
+        let p_bf_x = M * v_bf_x;
+        let p_bf_y = M * v_bf_y;
+        
+        let red_px = (simState === 'collided') ? p_rf_x.toFixed(2) : p_ri_x.toFixed(2);
+        let red_py = (simState === 'collided') ? p_rf_y.toFixed(2) : p_ri_y.toFixed(2);
+        let blue_px = (simState === 'collided') ? p_bf_x.toFixed(2) : '0.00';
+        let blue_py = (simState === 'collided') ? p_bf_y.toFixed(2) : '0.00';
+        
+        p.fill(239, 68, 68);
+        p.text('Red', x_pos[0], y+25);
+        p.fill(255);
+        p.text(red_px, x_pos[1], y+25);
+        p.text(red_py, x_pos[2], y+25);
+        
+        p.fill(59, 130, 246);
+        p.text('Blue', x_pos[0], y+45);
+        p.fill(255);
+        p.text(blue_px, x_pos[1], y+45);
+        p.text(blue_py, x_pos[2], y+45);
+        
+        p.stroke(255,150);
+        p.line(15, y+55, 325, y+55);
+        p.noStroke();
+        
+        let total_px = parseFloat(red_px) + parseFloat(blue_px);
+        let total_py = parseFloat(red_py) + parseFloat(blue_py);
+        
+        p.fill(255);
+        p.text('Total', x_pos[0], y+70);
+        p.text(total_px.toFixed(2), x_pos[1], y+70);
+        p.text(total_py.toFixed(2), x_pos[2], y+70);
+        
+        p.pop();
+    }
+    
+    function drawVector(origin, vec, label, vColor) {
+        p.push();
+        p.stroke(vColor);
+        p.strokeWeight(3);
+        p.fill(vColor);
+        p.translate(origin.x, origin.y);
+        // p5 has y-down, so we invert the y component for drawing
+        p.line(0, 0, vec.x, -vec.y);
+        p.translate(vec.x, -vec.y);
+        let angle = p.atan2(-vec.y, vec.x);
+        p.rotate(angle);
+        p.triangle(0, 0, -8, -4, -8, 4);
+        p.rotate(-angle);
+        p.noStroke();
+        p.fill(0);
+        p.textAlign(p.LEFT, p.CENTER);
+        p.text(label, 10, -10);
+        p.pop();
+    }
+
+    function attachEventListeners() {
+        document.getElementById('collideBtn').addEventListener('click', () => {
+            if(simState === 'ready') simState = 'running';
+        });
+        document.getElementById('resetBtn').addEventListener('click', initializeSimulation);
+    }
+    
+    function resetSidebarResults() {
+        const ids = ['vbfx-calc', 'vbfy-calc', 'vbf-speed-calc', 'vbf-angle-calc', 'kei-calc', 'kef-calc', 'elastic-result'];
+        ids.forEach(id => document.getElementById(id).textContent = '...');
+    }
+
+    function updateSidebarResults() {
+        document.getElementById('vbfx-calc').textContent = `${v_bf_x.toFixed(2)} m/s`;
+        document.getElementById('vbfy-calc').textContent = `${v_bf_y.toFixed(2)} m/s`;
+        document.getElementById('vbf-speed-calc').textContent = `${v_bf_speed.toFixed(2)} m/s`;
+        document.getElementById('vbf-angle-calc').textContent = `${theta_bf_deg.toFixed(1)}°`;
+        document.getElementById('kei-calc').textContent = `${ke_initial.toFixed(2)} J`;
+        document.getElementById('kef-calc').textContent = `${ke_final.toFixed(2)} J`;
+        
+        const ke_loss_percent = Math.abs(ke_final - ke_initial) / ke_initial * 100;
+        const resultEl = document.getElementById('elastic-result');
+        if (ke_loss_percent < 0.5) { // Allow for small floating point inaccuracies
+            resultEl.textContent = "Collision is Elastic";
+            resultEl.classList.remove('text-red-300');
+            resultEl.classList.add('text-green-300');
+        } else {
+            resultEl.textContent = "Collision is Inelastic";
+            resultEl.classList.remove('text-green-300');
+            resultEl.classList.add('text-red-300');
+        }
+    }
+};
+
+let p5_instance = new p5(sketch);
+</script>
+</body>
+</html>
