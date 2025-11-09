@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PHYS1100 | Banked Curve with Friction: Safe Speed Range</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --teal-main: #0f766e;
+      --teal-soft: #14b8a6;
+      --bg-soft: #f1f5f9;
+      --bg-card: #ffffff;
+      --slate-soft: #6b7280;
+      --slate-deep: #0f172a;
+      --accent-red: #ef4444;
+      --accent-amber: #f59e0b;
+      --accent-emerald: #22c55e;
+      --road-gray: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, -sans-serif;
+      background:
+        radial-gradient(circle at top left, #eff6ff 0, #e0f7f5 26%, #f9fafb 68%, #eef2ff 100%);
+      color: var(--slate-deep);
+      overflow: hidden;
+    }
+
+    .layout-root {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: stretch;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* LEFT PANEL */
+    .teal-panel {
+      width: 340px;
+      max-width: 360px;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 70%),
+        linear-gradient(
+          180deg,
+          rgba(240, 253, 250, 1),
+          rgba(224, 242, 254, 1)
+        );
+      border-radius: 1.2rem;
+      padding: 1.1rem 1.25rem 0.9rem;
+      box-shadow:
+        0 16px 34px rgba(15, 23, 42, 0.16),
+        0 0 22px rgba(148, 163, 253, 0.18);
+      border: 1px solid rgba(148, 163, 253, 0.16);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .teal-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    .teal-panel::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 253, 0.55);
+      border-radius: 999px;
+    }
+
+    .panel-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 118, 110, 0.24);
+      background: rgba(240, 253, 250, 0.98);
+      font-size: 0.63rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--teal-main);
+    }
+
+    .panel-pill span.dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.8);
+    }
+
+    .panel-title {
+      font-size: 1.14rem;
+      font-weight: 700;
+      color: #064e3b;
+      letter-spacing: 0.01em;
+      margin-top: 0.1rem;
+    }
+
+    .panel-subtitle {
+      font-size: 0.74rem;
+      color: #065f46;
+      line-height: 1.4;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.35rem;
+      margin-top: 0.1rem;
+    }
+
+    .info-card {
+      padding: 0.35rem 0.5rem;
+      border-radius: 0.65rem;
+      background: rgba(248, 250, 252, 0.98);
+      border: 1px solid rgba(148, 163, 253, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 0.06rem;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03);
+      font-size: 0.6rem;
+    }
+
+    .info-label {
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9ca3af;
+    }
+
+    .info-value {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .info-sub {
+      font-size: 0.6rem;
+      color: #9ca3af;
+    }
+
+    .equations-block {
+      margin-top: 0.16rem;
+      padding: 0.42rem 0.55rem;
+      border-radius: 0.75rem;
+      background: rgba(248, 250, 252, 0.98);
+      border: 1px solid rgba(148, 163, 253, 0.26);
+      display: flex;
+      flex-direction: column;
+      gap: 0.16rem;
+      font-size: 0.66rem;
+      color: #065f46;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .equations-block code {
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas;
+      font-size: 0.63rem;
+      padding: 0.02rem 0.22rem;
+      border-radius: 0.25rem;
+      background: #ecfeff;
+      color: #0f766e;
+    }
+
+    .highlight-box {
+      padding: 0.22rem 0.32rem;
+      border-radius: 0.45rem;
+      background: rgba(22, 163, 74, 0.04);
+      border-left: 2px solid rgba(22, 163, 74, 0.9);
+    }
+
+    .slider-block {
+      margin-top: 0.16rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: 0.75rem;
+      background: rgba(248, 250, 252, 0.98);
+      border: 1px solid rgba(148, 163, 253, 0.22);
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+      font-size: 0.64rem;
+    }
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.35rem;
+    }
+
+    .slider-label-main {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .slider-label-sub {
+      font-size: 0.58rem;
+      color: #6b7280;
+    }
+
+    .slider-value {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #0f766e;
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(229, 231, 235, 1);
+      outline: none;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 253, 0.18);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #14b8a6, #0f766e);
+      box-shadow:
+        0 0 0 2px #ecfeff,
+        0 2px 8px rgba(15, 23, 42, 0.22);
+      transition: all 0.18s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.06) translateY(-0.5px);
+      box-shadow:
+        0 0 0 2px #e0f2fe,
+        0 4px 14px rgba(15, 23, 42, 0.32);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.3rem;
+    }
+
+    .primary-btn,
+    .ghost-btn,
+    .outline-pill {
+      border-radius: 999px;
+      font-size: 0.67rem;
+      padding: 0.22rem 0.7rem;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .primary-btn {
+      background: linear-gradient(to right, #14b8a6, #0f766e);
+      color: #ecfeff;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(15, 118, 110, 0.32);
+    }
+
+    .primary-btn:hover {
+      box-shadow: 0 6px 18px rgba(15, 118, 110, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .ghost-btn {
+      background: rgba(239, 246, 255, 0.98);
+      color: #0f766e;
+      border: 1px solid rgba(148, 163, 253, 0.6);
+      font-weight: 500;
+    }
+
+    .ghost-btn:hover {
+      background: #eff6ff;
+      box-shadow: 0 3px 9px rgba(148, 163, 253, 0.3);
+    }
+
+    .outline-pill {
+      background: transparent;
+      color: #6b7280;
+      border: 1px dashed rgba(148, 163, 253, 0.85);
+      padding-inline: 0.5rem;
+    }
+
+    .outline-pill span.key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(148, 163, 253, 0.9);
+      font-size: 0.55rem;
+      color: #4b5563;
+      margin-right: 0.16rem;
+    }
+
+    /* RIGHT SIDE */
+    .sim-container {
+      flex: 1;
+      min-width: 820px;
+      max-width: 1120px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .sim-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.08rem;
+    }
+
+    .sim-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .sim-subtitle {
+      font-size: 0.74rem;
+      color: #6b7280;
+    }
+
+    .sim-legend {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.66rem;
+      color: #6b7280;
+      flex-wrap: wrap;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      margin-right: 0.2rem;
+    }
+
+    .canvas-shell {
+      background:
+        radial-gradient(circle at top, #eff6ff, #ffffff 60%);
+      border-radius: 1.1rem;
+      padding: 0.7rem 0.9rem 0.6rem;
+      box-shadow:
+        0 14px 30px rgba(148, 163, 253, 0.18),
+        0 0 22px rgba(148, 163, 253, 0.12);
+      border: 1px solid rgba(148, 163, 253, 0.24);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .canvas-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.64rem;
+      color: #6b7280;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-soft {
+      padding: 0.16rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(239, 246, 255, 0.98);
+      border: 1px solid rgba(148, 163, 253, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      font-size: 0.6rem;
+      color: #6b7280;
+    }
+
+    #p5-root {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        overflow-y: auto;
+      }
+      .layout-root {
+        flex-direction: column;
+        height: auto;
+      }
+      .teal-panel {
+        width: 100%;
+        max-width: 900px;
+        max-height: 380px;
+      }
+      .sim-container {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="layout-root">
+  <!-- LEFT: Physics controls + explanation -->
+  <aside class="teal-panel">
+    <div class="panel-pill">
+      <span class="dot"></span>
+      PHYS1100 · Ch 6.1–6.2–6.5 · Banked Curve
+    </div>
+    <div class="panel-title">Banked Curve with Friction: Safe Speed Range</div>
+    <div class="panel-subtitle">
+      Explore a car on a frictional banked curve. Adjust road angle β, friction coefficient μₛ,
+      and radius R. See the Free Body Diagram and find the minimum and maximum speeds that keep
+      the car from sliding up or down.
+    </div>
+
+    <!-- Given/default values -->
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-label">Default scenario</div>
+        <div class="info-value">β = 25°</div>
+        <div class="info-sub">Wet roadway bank angle</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Static friction</div>
+        <div class="info-value">μₛ = 0.30</div>
+        <div class="info-sub">Tire-road (wet)</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Radius</div>
+        <div class="info-value">R = 50 m</div>
+        <div class="info-sub">Curve radius</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Gravity</div>
+        <div class="info-value">g = 9.8 m/s²</div>
+        <div class="info-sub">Used in calculations</div>
+      </div>
+    </div>
+
+    <!-- Equations summary -->
+    <div class="equations-block">
+      <div><strong>Idea:</strong> For a banked curve, radial direction is horizontal (toward center).</div>
+      <div class="highlight-box">
+        Just about to slide <strong>up</strong> (friction down-slope):
+        <div><code>v_max² = Rg (sinβ + μₛ cosβ) / (cosβ - μₛ sinβ)</code></div>
+      </div>
+      <div class="highlight-box">
+        Just about to slide <strong>down</strong> (friction up-slope):
+        <div><code>v_min² = Rg (sinβ - μₛ cosβ) / (cosβ + μₛ sinβ)</code></div>
+      </div>
+      <div>
+        For a given β, μₛ, R:
+        - If <code>v < v_min</code> ⇒ slides down.
+        - If <code>v > v_max</code> ⇒ slides up.
+        - If <code>v_min ≤ v ≤ v_max</code> ⇒ friction can keep car in circular motion.
+      </div>
+    </div>
+
+    <!-- Sliders -->
+    <div class="slider-block">
+      <div class="slider-label-row">
+        <div>
+          <div class="slider-label-main">Bank angle β</div>
+          <div class="slider-label-sub">Tilt of the roadway</div>
+        </div>
+        <div class="slider-value" id="beta-value">25.0°</div>
+      </div>
+      <input id="beta-slider" type="range" min="5" max="40" step="0.5" value="25" />
+    </div>
+
+    <div class="slider-block">
+      <div class="slider-label-row">
+        <div>
+          <div class="slider-label-main">Static friction μₛ</div>
+          <div class="slider-label-sub">Tire-road grip</div>
+        </div>
+        <div class="slider-value" id="mu-value">0.30</div>
+      </div>
+      <input id="mu-slider" type="range" min="0" max="0.6" step="0.02" value="0.30" />
+    </div>
+
+    <div class="slider-block">
+      <div class="slider-label-row">
+        <div>
+          <div class="slider-label-main">Radius R</div>
+          <div class="slider-label-sub">Tighter curve ⇒ stronger centripetal demand</div>
+        </div>
+        <div class="slider-value" id="R-value">50 m</div>
+      </div>
+      <input id="R-slider" type="range" min="20" max="150" step="5" value="50" />
+    </div>
+
+    <div class="slider-block">
+      <div class="slider-label-row">
+        <div>
+          <div class="slider-label-main">Car speed v</div>
+          <div class="slider-label-sub">Test against safe range</div>
+        </div>
+        <div class="slider-value" id="v-value">18.0 m/s</div>
+      </div>
+      <input id="v-slider" type="range" min="0" max="40" step="0.5" value="18" />
+    </div>
+
+    <!-- Controls -->
+    <div class="btn-row">
+      <button id="set-problem-btn" class="ghost-btn">
+        Reset to Problem Values
+      </button>
+      <button id="snap-safe-btn" class="primary-btn">
+        Set v to Mid of Safe Range
+      </button>
+    </div>
+    <div class="btn-row">
+      <div class="outline-pill">
+        <span class="key">Space</span> Toggle car motion
+      </div>
+      <div class="outline-pill">
+        <span class="key">←</span><span class="key">→</span> Adjust speed
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT: Visual + FBD -->
+  <section class="sim-container">
+    <div class="sim-header">
+      <div class="sim-title-block">
+        <div class="sim-title">Banked Curve Free Body Diagram & Safe Speed Range</div>
+        <div class="sim-subtitle">
+          The car moves on a cross-section of the banked curve. Forces are drawn in the FBD:
+          weight mg, normal force N, and static friction fₛ. The panel computes v_min, v_max and
+          classifies whether the chosen speed is safe, sliding up, or sliding down.
+        </div>
+      </div>
+      <div class="sim-legend">
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:#111827;"></span> N (normal)
+        </span>
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:#22c55e;"></span> fₛ (friction)
+        </span>
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:#3b82f6;"></span> mg (weight)
+        </span>
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:#22c55e;"></span> Safe region
+        </span>
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:#f97316;"></span> Slide down
+        </span>
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:#ef4444;"></span> Slide up
+        </span>
+      </div>
+    </div>
+
+    <div class="canvas-shell">
+      <div class="canvas-toolbar">
+        <div class="toolbar-left">
+          <div class="pill-soft">
+            β =
+            <span id="beta-label" class="font-mono text-teal-700">25.0°</span>
+          </div>
+          <div class="pill-soft">
+            μₛ =
+            <span id="mu-label" class="font-mono text-teal-700">0.30</span>
+          </div>
+          <div class="pill-soft">
+            R =
+            <span id="R-label" class="font-mono text-slate-700">50</span> m
+          </div>
+          <div class="pill-soft">
+            v_min =
+            <span id="vmin-label" class="font-mono text-sky-700">?</span> m/s
+          </div>
+          <div class="pill-soft">
+            v_max =
+            <span id="vmax-label" class="font-mono text-sky-700">?</span> m/s
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <div class="pill-soft">
+            Current v =
+            <span id="v-label-top" class="font-mono">18.0</span> m/s
+            <span id="status-label" class="font-semibold text-emerald-600">(evaluating...)</span>
+          </div>
+        </div>
+      </div>
+      <div id="p5-root"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // Banked curve with friction simulation
+  // Physics:
+  // For car mass m, radius R, bank angle β, static friction μs, g:
+  // At verge of sliding UP (friction down-slope):
+  //   v_max^2 = R g (sinβ + μs cosβ) / (cosβ - μs sinβ)
+  // At verge of sliding DOWN (friction up-slope):
+  //   v_min^2 = R g (sinβ - μs cosβ) / (cosβ + μs sinβ)
+  // These formulas implemented with checks for degeneracies.
+  // Visualization:
+  //  - Banked road cross-section
+  //  - Car as block on slope, moving back-and-forth
+  //  - FBD arrows anchored on car
+  //  - Status color: safe / slide up / slide down
+
+  const sketch = (p) => {
+    const CANVAS_W = 800;
+    const CANVAS_H = 420;
+
+    // Geometry for road
+    const roadCenterX = CANVAS_W / 2;
+    const roadCenterY = 260;
+    const roadHalfLength = 260;
+
+    // Car representation
+    const carLength = 70;
+    const carHeight = 35;
+
+    // Physics parameters
+    let betaDeg = 25;
+    let mu = 0.30;
+    let R = 50;
+    const g = 9.8;
+    const mass = 1000; // arbitrary, cancels in formulas
+
+    let v = 18; // m/s
+
+    let vMin = 0;
+    let vMax = 0;
+    let hasVmin = false;
+    let hasVmax = false;
+
+    // Animation state
+    let running = true;
+    let carPhase = 0; // for motion left-right along bank
+
+    // DOM elements
+    let betaSlider, muSlider, RSlider, vSlider;
+    let betaValSpan, muValSpan, RValSpan, vValSpan;
+    let betaLabel, muLabel, RLabel, vLabelTop;
+    let vminLabel, vmaxLabel, statusLabel;
+    let setProblemBtn, snapSafeBtn, playToggleBtn;
+
+    p.setup = () => {
+      const canvas = p.createCanvas(CANVAS_W, CANVAS_H);
+      canvas.parent("p5-root");
+      p.frameRate(60);
+
+      // Grab DOM elements
+      betaSlider = p.select("#beta-slider");
+      muSlider = p.select("#mu-slider");
+      RSlider = p.select("#R-slider");
+      vSlider = p.select("#v-slider");
+
+      betaValSpan = p.select("#beta-value");
+      muValSpan = p.select("#mu-value");
+      RValSpan = p.select("#R-value");
+      vValSpan = p.select("#v-value");
+
+      betaLabel = p.select("#beta-label");
+      muLabel = p.select("#mu-label");
+      RLabel = p.select("#R-label");
+      vLabelTop = p.select("#v-label-top");
+
+      vminLabel = p.select("#vmin-label");
+      vmaxLabel = p.select("#vmax-label");
+      statusLabel = p.select("#status-label");
+
+      setProblemBtn = p.select("#set-problem-btn");
+      snapSafeBtn = p.select("#snap-safe-btn");
+      playToggleBtn = p.select("#play-toggle");
+
+      // Event bindings
+      betaSlider.input(onParamChange);
+      muSlider.input(onParamChange);
+      RSlider.input(onParamChange);
+      vSlider.input(onSpeedChange);
+
+      setProblemBtn.mousePressed(resetToProblem);
+      snapSafeBtn.mousePressed(setSafeMidSpeed);
+      playToggleBtn.mousePressed(togglePlay);
+
+      // Init
+      resetToProblem();
+    };
+
+    function resetToProblem() {
+      betaDeg = 25;
+      mu = 0.30;
+      R = 50;
+      v = 18; // some value; user can adjust
+
+      betaSlider.value(betaDeg);
+      muSlider.value(mu);
+      RSlider.value(R);
+      vSlider.value(v);
+
+      updateParams();
+    }
+
+    function onParamChange() {
+      betaDeg = parseFloat(betaSlider.value());
+      mu = parseFloat(muSlider.value());
+      R = parseFloat(RSlider.value());
+      updateParams();
+    }
+
+    function onSpeedChange() {
+      v = parseFloat(vSlider.value());
+      updateSpeedDisplays();
+    }
+
+    function togglePlay() {
+      running = !running;
+      if (running) {
+        playToggleBtn.html("Pause Car Motion");
+      } else {
+        playToggleBtn.html("Resume Car Motion");
+      }
+    }
+
+    function setSafeMidSpeed() {
+      computeLimits();
+      if (hasVmin && hasVmax && vMax > vMin) {
+        v = 0.5 * (vMin + vMax);
+      } else if (hasVmin && !hasVmax) {
+        v = vMin * 1.05;
+      } else if (!hasVmin && hasVmax) {
+        v = vMax * 0.95;
+      } else {
+        v = 0;
+      }
+      v = Math.max(0, Math.min(v, parseFloat(vSlider.elt.max)));
+      vSlider.value(v);
+      updateSpeedDisplays();
+    }
+
+    function updateParams() {
+      // Update left-panel values
+      betaValSpan.html(betaDeg.toFixed(1) + "°");
+      muValSpan.html(mu.toFixed(2));
+      RValSpan.html(R.toFixed(0) + " m");
+
+      // Top toolbar
+      betaLabel.html(betaDeg.toFixed(1) + "°");
+      muLabel.html(mu.toFixed(2));
+      RLabel.html(R.toFixed(0));
+
+      computeLimits();
+      updateSpeedDisplays();
+    }
+
+    function computeLimits() {
+      const beta = (betaDeg * Math.PI) / 180;
+      const sinb = Math.sin(beta);
+      const cosb = Math.cos(beta);
+
+      hasVmin = false;
+      hasVmax = false;
+      vMin = 0;
+      vMax = 0;
+
+      // v_max^2 = R g (sinb + μ cosb) / (cosb - μ sinb)
+      const denomMax = cosb - mu * sinb;
+      const numerMax = sinb + mu * cosb;
+      if (denomMax > 0 && numerMax > 0) {
+        const vmax2 = (R * g * numerMax) / denomMax;
+        if (vmax2 > 0) {
+          vMax = Math.sqrt(vmax2);
+          hasVmax = true;
+        }
+      }
+
+      // v_min^2 = R g (sinb - μ cosb) / (cosb + μ sinb)
+      const denomMin = cosb + mu * sinb;
+      const numerMin = sinb - mu * cosb;
+      if (denomMin > 0 && numerMin > 0) {
+        const vmin2 = (R * g * numerMin) / denomMin;
+        if (vmin2 > 0) {
+          vMin = Math.sqrt(vmin2);
+          hasVmin = true;
+        }
+      }
+
+      vminLabel.html(hasVmin ? vMin.toFixed(2) : "N/A");
+      vmaxLabel.html(hasVmax ? vMax.toFixed(2) : "N/A");
+    }
+
+    function updateSpeedDisplays() {
+      vValSpan.html(v.toFixed(1) + " m/s");
+      vLabelTop.html(v.toFixed(1));
+      classifySpeed();
+    }
+
+    function classifySpeed() {
+      let status = "";
+      let color = "#22c55e";
+
+      if (hasVmin && hasVmax && vMax > vMin) {
+        if (v < vMin - 1e-6) {
+          status = "Sliding DOWN (too slow)";
+          color = "#f97316";
+        } else if (v > vMax + 1e-6) {
+          status = "Sliding UP (too fast)";
+          color = "#ef4444";
+        } else {
+          status = "SAFE: friction can hold";
+          color = "#22c55e";
+        }
+      } else if (hasVmax && !hasVmin) {
+        if (v > vMax + 1e-6) {
+          status = "Sliding UP (too fast)";
+          color = "#ef4444";
+        } else {
+          status = "SAFE up to v_max";
+          color = "#22c55e";
+        }
+      } else if (hasVmin && !hasVmax) {
+        if (v < vMin - 1e-6) {
+          status = "Sliding DOWN (too slow)";
+          color = "#f97316";
+        } else {
+          status = "SAFE above v_min";
+          color = "#22c55e";
+        }
+      } else {
+        status = "No static-friction solution (check β, μₛ)";
+        color = "#ef4444";
+      }
+
+      statusLabel.html("(" + status + ")");
+      statusLabel.elt.style.color = color;
+    }
+
+    p.draw = () => {
+      p.clear();
+      p.background(0, 0, 0, 0);
+
+      if (running) {
+        carPhase += 0.02 + 0.0015 * v;
+      }
+
+      drawBankedRoad();
+      drawCarAndFBD();
+    };
+
+    function drawBankedRoad() {
+      const beta = (betaDeg * Math.PI) / 180;
+      const dx = roadHalfLength * Math.cos(beta);
+      const dy = roadHalfLength * Math.sin(beta);
+
+      const x1 = roadCenterX - dx;
+      const y1 = roadCenterY + dy;
+      const x2 = roadCenterX + dx;
+      const y2 = roadCenterY - dy;
+
+      // Road base
+      p.push();
+      p.stroke("#111827");
+      p.strokeWeight(10);
+      p.line(x1, y1, x2, y2);
+
+      // Lane lines
+      p.stroke(148, 163, 253, 200);
+      p.strokeWeight(2);
+      const segments = 14;
+      for (let i = 0; i < segments; i += 2) {
+        const tStart = i / segments;
+        const tEnd = (i + 1) / segments;
+        const sx = p.lerp(x1, x2, tStart);
+        const sy = p.lerp(y1, y2, tStart);
+        const ex = p.lerp(x1, x2, tEnd);
+        const ey = p.lerp(y1, y2, tEnd);
+        p.line(sx, sy, ex, ey);
+      }
+
+      // Horizontal reference
+      p.stroke(209, 213, 219);
+      p.strokeWeight(1);
+      p.line(40, roadCenterY + 80, CANVAS_W - 40, roadCenterY + 80);
+      p.noStroke();
+      p.fill("#6b7280");
+      p.textSize(9);
+      p.textAlign(p.LEFT, p.BOTTOM);
+      p.text("Horizontal", 46, roadCenterY + 78);
+
+      // Angle arc
+      p.push();
+      p.translate(roadCenterX - dx, roadCenterY + dy);
+      p.noFill();
+      p.stroke("#14b8a6");
+      p.strokeWeight(1.2);
+      const rArc = 26;
+      p.arc(0, 0, rArc, rArc, 0, -beta, true);
+      p.noStroke();
+      p.fill("#22c55e");
+      p.textSize(8);
+      p.textAlign(p.LEFT, p.BOTTOM);
+      p.text(betaDeg.toFixed(0) + "°", 8, -8);
+      p.pop();
+
+      p.pop();
+    }
+
+    function drawCarAndFBD() {
+      const beta = (betaDeg * Math.PI) / 180;
+      const dx = roadHalfLength * Math.cos(beta);
+      const dy = roadHalfLength * Math.sin(beta);
+
+      const x1 = roadCenterX - dx;
+      const y1 = roadCenterY + dy;
+      const x2 = roadCenterX + dx;
+      const y2 = roadCenterY - dy;
+
+      // Position car along road using phase
+      const t = (Math.sin(carPhase) * 0.35 + 0.5); // between ~0.15 and 0.85
+      const cx = p.lerp(x1, x2, t);
+      const cy = p.lerp(y1, y2, t);
+
+      // Road tangent and normal
+      const tx = (x2 - x1) / (2 * roadHalfLength);
+      const ty = (y2 - y1) / (2 * roadHalfLength);
+      const nx = -ty;
+      const ny = tx;
+
+      p.push();
+      p.translate(cx, cy);
+      p.rotate(-Math.atan2(y2 - y1, x2 - x1)); // align car with road
+
+      // Car body
+      p.fill("#111827");
+      p.stroke("#0f172a");
+      p.strokeWeight(1.5);
+      p.rectMode(p.CENTER);
+      p.rect(0, -carHeight / 2, carLength, carHeight, 6);
+
+      // Windows
+      p.noStroke();
+      p.fill(148, 163, 253, 220);
+      p.rect(5, -carHeight / 2 - 4, 24, 10, 4);
+
+      // Wheels
+      p.fill("#020817");
+      p.rect(-carLength / 3, 0, 16, 6, 2);
+      p.rect(carLength / 3, 0, 16, 6, 2);
+
+      p.pop();
+
+      // FBD at car center (draw in world coords)
+      drawFBD(cx, cy, beta, nx, ny);
+    }
+
+    function drawFBD(cx, cy, beta, nx, ny) {
+      // Compute direction of friction based on current speed classification
+      const sinb = Math.sin(beta);
+      const cosb = Math.cos(beta);
+
+      // Determine friction direction at this v:
+      // If v > v_max: friction acts down-slope (upwards along bank, opposing outward slide).
+      // If v < v_min: friction acts up-slope (downwards along bank, opposing inward slide).
+      // In safe range: friction adjusts; we show the needed direction qualitatively.
+
+      let slideStatusColor = statusLabel.elt.style.color || "#22c55e";
+      let frictionDir = 0; // +1 up along slope, -1 down, 0 minimal
+      if (hasVmin && hasVmax && vMax > vMin) {
+        if (v < vMin - 1e-6) frictionDir = +1; // friction up-slope (prevent sliding down)
+        else if (v > vMax + 1e-6) frictionDir = -1; // friction down-slope
+        else frictionDir = 0;
+      } else if (hasVmax && !hasVmin) {
+        if (v > vMax + 1e-6) frictionDir = -1;
+        else frictionDir = 0;
+      } else if (hasVmin && !hasVmax) {
+        if (v < vMin - 1e-6) frictionDir = +1;
+        else frictionDir = 0;
+      }
+
+      // Define tangent unit vector along slope (upwards along road)
+      const tx = Math.cos(beta);
+      const ty = -Math.sin(beta);
+
+      // Force arrow scaling
+      const baseLen = 40;
+
+      p.push();
+      p.translate(cx, cy);
+
+      // Weight mg (downwards)
+      drawVector(0, 0, 0, baseLen * 1.1, "#3b82f6", "mg");
+
+      // Normal N (perpendicular to surface, along +n)
+      drawVector(0, 0, -nx * baseLen * 1.0, -ny * baseLen * 1.0, "#111827", "N");
+
+      // Friction f_s
+      if (frictionDir !== 0) {
+        const fx = frictionDir * tx * baseLen * 0.8;
+        const fy = frictionDir * ty * baseLen * 0.8;
+        drawVector(0, 0, fx, fy, "#22c55e", "fₛ");
+      } else {
+        // small transparent hint if safe
+        const fx = tx * baseLen * 0.4;
+        const fy = ty * baseLen * 0.4;
+        drawVector(0, 0, fx, fy, "rgba(16,185,129,0.35)", "|fₛ|");
+      }
+
+      // Label showing classification
+      p.noStroke();
+      p.fill(slideStatusColor);
+      p.textAlign(p.LEFT, p.TOP);
+      p.textSize(9);
+      p.text("Status: " + statusLabel.html().replace(/[()]/g, ""), 18, -40);
+
+      p.pop();
+    }
+
+    function drawVector(x1, y1, x2, y2, color, label) {
+      // x2,y2 are relative end coordinates
+      const col =
+        typeof color === "string" && color.startsWith("rgba")
+          ? color
+          : color;
+      if (typeof col === "string" && col.startsWith("rgba")) {
+        // parse rgba string
+        p.stroke(34, 197, 94, 90);
+      } else {
+        p.stroke(color);
+      }
+      p.push();
+      p.strokeWeight(2);
+      if (typeof color === "string" && color.startsWith("rgba")) {
+        const m = color.match(/rgba\((\d+),(\d+),(\d+),([0-9.]+)\)/);
+        if (m) {
+          p.stroke(parseInt(m[1]), parseInt(m[2]), parseInt(m[3]), parseFloat(m[4]) * 255);
+          p.fill(parseInt(m[1]), parseInt(m[2]), parseInt(m[3]), parseFloat(m[4]) * 255);
+        }
+      } else {
+        p.stroke(color);
+        p.fill(color);
+      }
+
+      p.line(x1, y1, x2, y2);
+      // Arrowhead
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const size = 6;
+      p.push();
+      p.translate(x2, y2);
+      p.rotate(angle);
+      p.triangle(0, 0, -size, -size / 2, -size, size / 2);
+      p.pop();
+
+      // Label
+      p.noStroke();
+      if (typeof color === "string" && !color.startsWith("rgba")) {
+        p.fill(color);
+      } else {
+        p.fill("#4b5563");
+      }
+      p.textAlign(p.LEFT, p.CENTER);
+      p.textSize(9);
+      const lx = x2 + 4;
+      const ly = y2;
+      p.text(label, lx, ly);
+      p.pop();
+    }
+
+    // Keyboard controls
+    p.keyPressed = () => {
+      if (p.key === " " || p.key === "Spacebar") {
+        togglePlay();
+      } else if (p.keyCode === p.RIGHT_ARROW) {
+        v = Math.min(parseFloat(vSlider.elt.max), v + 0.5);
+        vSlider.value(v);
+        updateSpeedDisplays();
+      } else if (p.keyCode === p.LEFT_ARROW) {
+        v = Math.max(0, v - 0.5);
+        vSlider.value(v);
+        updateSpeedDisplays();
+      }
+    };
+  };
+
+  new p5(sketch);
+</script>
+</body>
+</html>

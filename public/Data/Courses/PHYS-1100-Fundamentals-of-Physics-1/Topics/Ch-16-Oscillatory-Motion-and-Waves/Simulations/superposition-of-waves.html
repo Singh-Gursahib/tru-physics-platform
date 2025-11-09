@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PHYS1100 | Superposition of Waves (Slide 19)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <!-- Tailwind CSS via CDN for utility classes -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --teal-main: #0f766e;
+      --teal-soft: #14b8a6;
+      --bg-main: #f3f4ff;
+      --bg-card: #ffffff;
+      --slate-soft: #6b7280;
+      --slate-deep: #111827;
+      --purple: #a855f7;
+      --blue: #2563eb;
+      --emerald: #10b981;
+      --accent: #f97316;
+      --grid-line: #d1d5db;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, -sans-serif;
+      background:
+        radial-gradient(circle at top left, #eff6ff 0, #e0f7f5 30%, #f9fafb 70%, #eef2ff 100%);
+      color: var(--slate-deep);
+      overflow: hidden;
+    }
+
+    .layout-root {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: stretch;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Left: Light teal sidebar */
+    .teal-panel {
+      width: 340px;
+      max-width: 360px;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 70%),
+        linear-gradient(
+          180deg,
+          rgba(240, 253, 250, 1),
+          rgba(219, 246, 240, 1),
+          rgba(224, 242, 254, 1)
+        );
+      border-radius: 1.2rem;
+      padding: 1.1rem 1.25rem 0.9rem;
+      box-shadow:
+        0 16px 34px rgba(15, 23, 42, 0.16),
+        0 0 22px rgba(148, 163, 253, 0.18);
+      border: 1px solid rgba(148, 163, 253, 0.16);
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .teal-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    .teal-panel::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 253, 0.55);
+      border-radius: 999px;
+    }
+
+    .panel-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 118, 110, 0.24);
+      background: rgba(240, 253, 250, 0.98);
+      font-size: 0.63rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--teal-main);
+    }
+
+    .panel-pill span.dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.8);
+    }
+
+    .panel-title {
+      font-size: 1.14rem;
+      font-weight: 700;
+      color: #064e3b;
+      letter-spacing: 0.01em;
+      margin-top: 0.1rem;
+    }
+
+    .panel-subtitle {
+      font-size: 0.74rem;
+      color: #065f46;
+      line-height: 1.4;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.35rem;
+      margin-top: 0.1rem;
+    }
+
+    .info-card {
+      padding: 0.35rem 0.5rem;
+      border-radius: 0.65rem;
+      background: rgba(248, 250, 252, 0.98);
+      border: 1px solid rgba(148, 163, 253, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 0.06rem;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03);
+      font-size: 0.6rem;
+    }
+
+    .info-label {
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9ca3af;
+    }
+
+    .info-value {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .info-sub {
+      font-size: 0.6rem;
+      color: #9ca3af;
+    }
+
+    .equations-block {
+      margin-top: 0.16rem;
+      padding: 0.42rem 0.55rem;
+      border-radius: 0.75rem;
+      background: rgba(248, 250, 252, 0.98);
+      border: 1px solid rgba(148, 163, 253, 0.26);
+      display: flex;
+      flex-direction: column;
+      gap: 0.16rem;
+      font-size: 0.66rem;
+      color: #065f46;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .equations-block code {
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas;
+      font-size: 0.63rem;
+      padding: 0.02rem 0.22rem;
+      border-radius: 0.25rem;
+      background: #ecfeff;
+      color: #0f766e;
+    }
+
+    .highlight-box {
+      padding: 0.22rem 0.32rem;
+      border-radius: 0.45rem;
+      background: rgba(22, 163, 74, 0.04);
+      border-left: 2px solid rgba(22, 163, 74, 0.9);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.34rem;
+    }
+
+    .primary-btn,
+    .ghost-btn,
+    .outline-pill {
+      border-radius: 999px;
+      font-size: 0.67rem;
+      padding: 0.22rem 0.7rem;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .primary-btn {
+      background: linear-gradient(to right, #14b8a6, #0f766e);
+      color: #ecfeff;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(15, 118, 110, 0.32);
+    }
+
+    .primary-btn:hover {
+      box-shadow: 0 6px 18px rgba(15, 118, 110, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .ghost-btn {
+      background: rgba(239, 246, 255, 0.98);
+      color: #0f766e;
+      border: 1px solid rgba(148, 163, 253, 0.6);
+      font-weight: 500;
+    }
+
+    .ghost-btn:hover {
+      background: #eff6ff;
+      box-shadow: 0 3px 9px rgba(148, 163, 253, 0.3);
+    }
+
+    .outline-pill {
+      background: transparent;
+      color: #6b7280;
+      border: 1px dashed rgba(148, 163, 253, 0.85);
+      padding-inline: 0.5rem;
+    }
+
+    .outline-pill span.key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(148, 163, 253, 0.9);
+      font-size: 0.55rem;
+      color: #4b5563;
+      margin-right: 0.16rem;
+    }
+
+    /* Right: stacked graphs */
+    .sim-container {
+      flex: 1;
+      min-width: 820px;
+      max-width: 1120px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .sim-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.08rem;
+    }
+
+    .sim-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .sim-subtitle {
+      font-size: 0.74rem;
+      color: #6b7280;
+    }
+
+    .sim-legend {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.66rem;
+      color: #6b7280;
+      flex-wrap: wrap;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      margin-right: 0.2rem;
+    }
+
+    .canvas-shell {
+      background:
+        radial-gradient(circle at top, #eff6ff, #ffffff 60%);
+      border-radius: 1.1rem;
+      padding: 0.7rem 0.9rem 0.6rem;
+      box-shadow:
+        0 14px 30px rgba(148, 163, 253, 0.18),
+        0 0 22px rgba(148, 163, 253, 0.12);
+      border: 1px solid rgba(148, 163, 253, 0.24);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .canvas-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.64rem;
+      color: #6b7280;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-soft {
+      padding: 0.16rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(239, 246, 255, 0.98);
+      border: 1px solid rgba(148, 163, 253, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      font-size: 0.6rem;
+      color: #6b7280;
+    }
+
+    #p5-root {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        overflow-y: auto;
+      }
+      .layout-root {
+        flex-direction: column;
+        height: auto;
+      }
+      .teal-panel {
+        width: 100%;
+        max-width: 900px;
+        max-height: 360px;
+      }
+      .sim-container {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="layout-root">
+  <!-- LEFT: Teal concept panel -->
+  <aside class="teal-panel">
+    <div class="panel-pill">
+      <span class="dot"></span>
+      PHYS1100 · Ch 16 · Superposition
+    </div>
+    <div class="panel-title">Superposition of Two Waves</div>
+    <div class="panel-subtitle">
+      This simulation models the two different waves shown in the chart.
+      Drag the teal time line to find the resultant displacement at any time t.
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-label">At t = 5 s (top wave)</div>
+        <div class="info-value">y₁(5) = 3.00</div>
+        <div class="info-sub">From first graph</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">At t = 5 s (bottom wave)</div>
+        <div class="info-value">y₂(5) = 0.00</div>
+        <div class="info-sub">From second graph</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Superposition at 5 s</div>
+        <div class="info-value" style="color:#059669;">
+          y₁ + y₂ = 3.00
+        </div>
+        <div class="info-sub">Algebraic sum</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Scrubber</div>
+        <div class="info-value">
+          t = <span id="t-readout">5.00</span> s
+        </div>
+        <div class="info-sub">Draggable teal line</div>
+      </div>
+    </div>
+
+    <div class="equations-block">
+      <div><strong>Principle of Superposition</strong></div>
+      <div>
+        For two waves at the same point and time:
+        <code>y_total(t) = y₁(t) + y₂(t)</code>.
+      </div>
+      <div class="highlight-box">
+        The task is to find the value at t = 5 s.
+        From the graphs: <code>y₁(5) = 3</code> and <code>y₂(5) = 0</code>.
+        The sum is: <code>3 + 0 = 3</code>.
+      </div>
+      <div>
+        The curves in this simulation now correctly model the image:
+        <code>y₁(t) = 3 sin(πt/2)</code><br>
+        <code>y₂(t) = -4 sin(πt)</code>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button id="jump-5-btn" class="primary-btn">
+        Jump to t = 5 s (Show 3.00, 0.00, 3.00)
+      </button>
+      <button id="play-toggle" class="ghost-btn">
+        <span id="play-icon">▶</span>
+        <span id="play-label">Auto-scan scrubber</span>
+      </button>
+    </div>
+    <div class="btn-row">
+      <div class="outline-pill">
+        <span class="key">Space</span> Toggle play/pause
+      </div>
+      <div class="outline-pill">
+        <span class="key">R</span> Reset to t = 5 s
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT: Triple graph visualization -->
+  <section class="sim-container">
+    <div class="sim-header">
+      <div class="sim-title-block">
+        <div class="sim-title">Superposition: Two Given Waves and Their Resultant</div>
+        <div class="sim-subtitle">
+          Top: Wave 1 (A=3, T=4s). Middle: Wave 2 (A=4, T=2s).
+          Bottom: Resultant wave y₁(t) + y₂(t).
+        </div>
+      </div>
+      <div class="sim-legend">
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:var(--blue);"></span> Wave 1: y₁(t)
+        </span>
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:var(--purple);"></span> Wave 2: y₂(t)
+        </span>
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:var(--emerald);"></span> Sum: y₁(t) + y₂(t)
+        </span>
+      </div>
+    </div>
+
+    <div class="canvas-shell">
+      <div class="canvas-toolbar">
+        <div class="toolbar-left">
+          <div class="pill-soft">
+            t =
+            <strong><span id="t-label">5.00</span> s</strong>
+          </div>
+          <div class="pill-soft">
+            y₁(t) =
+            <span id="y1-label" class="font-mono text-sky-600">3.00</span>
+          </div>
+          <div class="pill-soft">
+            y₂(t) =
+            <span id="y2-label" class="font-mono text-purple-600">0.00</span>
+          </div>
+          <div class="pill-soft">
+            y₁ + y₂ =
+            <span id="sum-label" class="font-mono text-emerald-700 font-semibold">3.00</span>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <div class="pill-soft">
+            Drag teal line or press
+            <span class="font-mono text-xs text-slate-500">Space</span>
+            to auto-scan across 0–9 s.
+          </div>
+        </div>
+      </div>
+      <div id="p5-root"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // This simulation correctly models the waves from the "Quick Check-1" image.
+  // - Time axis: 0 to 9 s
+  // - Wave 1: A=3, T=4s. y1(t) = 3*sin(pi*t/2)
+  // - Wave 2: A=4, T=2s. y2(t) = -4*sin(pi*t)
+  // The superposition at t=5s is y1(5)+y2(5) = 3 + 0 = 3.
+
+  const sketch = (p) => {
+    const CANVAS_W = 800;
+    const CANVAS_H = 520;
+
+    // Regions for the 3 stacked graphs
+    const padX = 65;
+    const topRegion = { x: padX, y: 40,  w: CANVAS_W - 2 * padX, h: 120 };
+    const midRegion = { x: padX, y: 190, w: CANVAS_W - 2 * padX, h: 120 };
+    const botRegion = { x: padX, y: 340, w: CANVAS_W - 2 * padX, h: 140 };
+
+    // Time range matches image (0 to 9 s)
+    const tMin = 0;
+    const tMax = 9;
+
+    // Scrubber state
+    let tScrub = 5.0; // Start at the time of interest
+    let dragging = false;
+    let running = false;
+
+    // DOM references
+    let tLabel, tSidebar, y1Label, y2Label, sumLabel;
+    let playToggleBtn, playIcon, playLabel, jump5Btn;
+
+    // Wave 1: A=3, T=4s.
+    function y1(t) {
+      const A = 3.0;
+      const omega = Math.PI / 2; // omega = 2*PI / T = 2*PI / 4
+      return A * Math.sin(omega * t);
+    }
+
+    // Wave 2: A=4, T=2s (negative sine).
+    function y2(t) {
+      const A = 4.0;
+      const omega = Math.PI; // omega = 2*PI / T = 2*PI / 2
+      return -A * Math.sin(omega * t);
+    }
+
+    // Superposition: The algebraic sum of the two waves
+    function ySum(t) {
+      return y1(t) + y2(t);
+    }
+    
+    // --- UTILITY FUNCTIONS ---
+    function tToX(t, region) {
+      return p.map(t, tMin, tMax, region.x, region.x + region.w);
+    }
+
+    // Maps a y-value to a pixel coordinate within a given graph region.
+    // The Ymax value defines the vertical scale of the graph.
+    function yToPix(y, region, Ymax) {
+      return p.map(y, -Ymax, Ymax, region.y + region.h, region.y);
+    }
+
+    p.setup = () => {
+      const canvas = p.createCanvas(CANVAS_W, CANVAS_H);
+      canvas.parent("p5-root");
+      p.frameRate(60);
+
+      // Link to HTML elements
+      tLabel = p.select("#t-label");
+      tSidebar = p.select("#t-readout");
+      y1Label = p.select("#y1-label");
+      y2Label = p.select("#y2-label");
+      sumLabel = p.select("#sum-label");
+
+      playToggleBtn = p.select("#play-toggle");
+      playIcon = p.select("#play-icon");
+      playLabel = p.select("#play-label");
+      jump5Btn = p.select("#jump-5-btn");
+
+      playToggleBtn.mousePressed(togglePlay);
+      jump5Btn.mousePressed(jumpToFive);
+
+      updateDisplays(); // Initial update on load
+    };
+
+    // --- INTERACTIVITY ---
+    function togglePlay() {
+      running = !running;
+      updatePlayButton();
+    }
+
+    function updatePlayButton() {
+      if (running) {
+        playIcon.html("⏸");
+        playLabel.html("Pause auto-scan");
+      } else {
+        playIcon.html("▶");
+        playLabel.html("Auto-scan scrubber");
+      }
+    }
+
+    function jumpToFive() {
+      tScrub = 5.0;
+      running = false;
+      updatePlayButton();
+      updateDisplays();
+    }
+
+    function clampScrub() {
+      tScrub = Math.max(tMin, Math.min(tMax, tScrub));
+    }
+
+    function updateDisplays() {
+      const y1v = y1(tScrub);
+      const y2v = y2(tScrub);
+      const sv = y1v + y2v;
+
+      tLabel.html(tScrub.toFixed(2));
+      tSidebar.html(tScrub.toFixed(2));
+      y1Label.html(y1v.toFixed(2));
+      y2Label.html(y2v.toFixed(2));
+      sumLabel.html(sv.toFixed(2));
+    }
+    
+    // --- DRAWING LOOP ---
+    p.draw = () => {
+      p.clear();
+      p.background(0, 0, 0, 0);
+
+      if (running) {
+        tScrub += 0.025;
+        if (tScrub > tMax) tScrub = tMin;
+        updateDisplays();
+      }
+
+      drawGraphs();
+      drawScrubberAndMarkers();
+    };
+
+    function drawGraphs() {
+      drawRegion(topRegion, "Wave 1: y₁(t)", "#2563eb", 4);
+      drawRegion(midRegion, "Wave 2: y₂(t)", "#a855f7", 4);
+      drawRegion(botRegion, "Resultant: y₁(t) + y₂(t)", "#10b981", 8); // Sum can reach A1+A2=7
+
+      drawWave(y1, topRegion, "#2563eb", 4);
+      drawWave(y2, midRegion, "#a855f7", 4);
+      drawWave(ySum, botRegion, "#10b981", 8);
+    }
+    
+    function drawWave(func, region, color, yMax) {
+      const samples = 480;
+      p.noFill();
+      p.stroke(color);
+      p.strokeWeight(2.1);
+      p.beginShape();
+      for (let i = 0; i <= samples; i++) {
+        const t = p.map(i, 0, samples, tMin, tMax);
+        const yy = func(t);
+        const x = tToX(t, region);
+        const y = yToPix(yy, region, yMax);
+        p.vertex(x, y);
+      }
+      p.endShape();
+    }
+
+    function drawRegion(region, title, color, Ymax) {
+      p.push();
+      // Grid lines (horizontal) at integer values
+      p.stroke(225, 231, 239);
+      p.strokeWeight(0.8);
+      for (let i = -Math.floor(Ymax); i <= Math.floor(Ymax); i++) {
+        if (i === 0) continue;
+        const yy = yToPix(i, region, Ymax);
+        p.line(region.x, yy, region.x + region.w, yy);
+      }
+
+      // Grid lines (vertical at integers of t)
+      for (let j = 0; j <= tMax; j++) {
+        const xx = tToX(j, region);
+        p.line(xx, region.y, xx, region.y + region.h);
+      }
+
+      // Axes: time axis at center, y-axis at left
+      const midY = yToPix(0, region, Ymax);
+      p.stroke(148, 163, 253);
+      p.strokeWeight(1.2);
+      p.line(region.x, midY, region.x + region.w, midY); // t axis
+      p.line(region.x, region.y, region.x, region.y + region.h); // y axis
+
+      // Labels
+      p.noStroke();
+      p.fill(color);
+      p.textAlign(p.LEFT, p.BOTTOM);
+      p.textSize(10);
+      p.text(title, region.x, region.y - 4);
+      
+      // Y-axis labels
+      p.fill("#6b7280");
+      p.textAlign(p.RIGHT, p.CENTER);
+      p.textSize(9);
+       for (let i = -Math.floor(Ymax); i <= Math.floor(Ymax); i++) {
+        if (i !== 0) {
+            p.text(i.toString(), region.x - 6, yToPix(i, region, Ymax));
+        }
+      }
+
+      // T-axis labels
+      p.textAlign(p.CENTER, p.TOP);
+       for (let tv = 0; tv <= tMax; tv++) {
+        p.text(tv.toString(), tToX(tv, region), midY + 5);
+      }
+      p.textAlign(p.RIGHT, p.CENTER);
+      p.text("t / s", region.x + region.w + 28, midY);
+
+
+      p.pop();
+    }
+
+    function drawScrubberAndMarkers() {
+      clampScrub();
+
+      const xScrub = tToX(tScrub, topRegion); // Same x for all graphs
+
+      // Vertical teal line spanning all graphs
+      const lineTop = topRegion.y - 20;
+      const lineBot = botRegion.y + botRegion.h + 20;
+      p.stroke(20, 184, 166, 235);
+      p.strokeWeight(2.2);
+      p.line(xScrub, lineTop, xScrub, lineBot);
+
+      // Get values at the scrubber's time
+      const y1v = y1(tScrub);
+      const y2v = y2(tScrub);
+      const sv = ySum(tScrub);
+
+      // Get pixel positions for the markers
+      const p1y = yToPix(y1v, topRegion, 4);
+      const p2y = yToPix(y2v, midRegion, 4);
+      const psy = yToPix(sv, botRegion, 8);
+
+      // Draw markers and labels
+      drawMarker(xScrub, p1y, "#2563eb", "y₁ = " + y1v.toFixed(2));
+      drawMarker(xScrub, p2y, "#a855f7", "y₂ = " + y2v.toFixed(2));
+      drawMarker(xScrub, psy, "#10b981", "y₁ + y₂ = " + sv.toFixed(2), true);
+    }
+
+    function drawMarker(x, y, colorHex, label, emphasize = false) {
+      p.push();
+      const col = p.color(colorHex);
+      p.noStroke();
+      p.fill(col);
+      p.circle(x, y, emphasize ? 10 : 8);
+
+      // Label bubble above marker
+      p.textAlign(p.CENTER, p.CENTER);
+      p.textSize(9);
+      const textW = p.textWidth(label) + 8;
+      const boxX = x;
+      const boxY = y - 16;
+      p.fill(255, 255, 255, 240);
+      p.stroke(col);
+      p.strokeWeight(1);
+      p.rectMode(p.CENTER);
+      p.rect(boxX, boxY, textW, 15, 8);
+      p.noStroke();
+      p.fill(col);
+      p.text(label, boxX, boxY + 1);
+      p.pop();
+    }
+
+    // --- MOUSE & KEYBOARD INPUT ---
+    p.mousePressed = () => {
+      const mx = p.mouseX;
+      const my = p.mouseY;
+      const allRegions = [topRegion, midRegion, botRegion];
+      // Check if mouse is inside any of the graph areas
+      for (const region of allRegions) {
+        if (mx > region.x && mx < region.x + region.w && my > region.y && my < region.y + region.h) {
+          dragging = true;
+          running = false;
+          updatePlayButton();
+          updateScrubFromMouse(mx, region);
+          break;
+        }
+      }
+    };
+
+    p.mouseDragged = () => {
+      if (!dragging) return;
+      updateScrubFromMouse(p.mouseX, topRegion);
+    };
+
+    p.mouseReleased = () => {
+      dragging = false;
+    };
+    
+    function updateScrubFromMouse(mx, region) {
+        const t = p.map(mx, region.x, region.x + region.w, tMin, tMax, true); // true clamps value
+        tScrub = t;
+        updateDisplays();
+    }
+
+    p.keyPressed = () => {
+      if (p.key === " ") {
+        p.preventDefault(); // Prevent page scroll on space
+        togglePlay();
+      } else if (p.key.toLowerCase() === "r") {
+        jumpToFive();
+      }
+    };
+  };
+
+  new p5(sketch);
+</script>
+</body>
+</html>

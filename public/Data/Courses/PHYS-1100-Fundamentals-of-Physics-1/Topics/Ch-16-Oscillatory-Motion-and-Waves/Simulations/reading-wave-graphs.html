@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PHYS1100 | Reading Wave Graphs: Snapshot vs History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- p5.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <!-- Tailwind via CDN for utility classes -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", -sans-serif;
+      background: radial-gradient(circle at top left, #0f172a 0, #020817 40%, #020817 100%);
+      color: #e5e7eb;
+      overflow: hidden;
+    }
+
+    .layout-root {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: stretch;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      width: 100vw;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .teal-panel {
+      width: 340px;
+      max-width: 360px;
+      background: linear-gradient(180deg, rgba(13, 148, 136, 0.97), rgba(15, 23, 42, 0.98));
+      border-radius: 1.25rem;
+      padding: 1.4rem 1.4rem 1.1rem;
+      box-shadow:
+        0 20px 45px rgba(0, 0, 0, 0.55),
+        0 0 25px rgba(45, 212, 191, 0.12);
+      backdrop-filter: blur(14px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      border: 1px solid rgba(148, 163, 253, 0.18);
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .teal-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    .teal-panel::-webkit-scrollbar-thumb {
+      background: rgba(15, 23, 42, 0.7);
+      border-radius: 999px;
+    }
+
+    .panel-label-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.2);
+      color: #e0f2f1;
+      border: 1px solid rgba(45, 212, 191, 0.35);
+      backdrop-filter: blur(6px);
+    }
+
+    .glow-orb {
+      position: absolute;
+      width: 130px;
+      height: 130px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.16), transparent 70%);
+      top: -30px;
+      right: -40px;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .sim-container {
+      flex: 1;
+      min-width: 820px;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      align-items: stretch;
+      justify-content: flex-start;
+    }
+
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #9ca3af;
+      font-size: 0.8rem;
+    }
+
+    .sim-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .sim-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .sim-subtitle {
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      margin-right: 0.25rem;
+    }
+
+    .canvas-shell {
+      background: radial-gradient(circle at top, #111827, #020817);
+      border-radius: 1.2rem;
+      padding: 0.75rem 0.9rem 0.85rem;
+      box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.65),
+        0 0 32px rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 253, 0.14);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .canvas-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      color: #9ca3af;
+      padding: 0 0.1rem;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+
+    .play-btn,
+    .secondary-btn {
+      border: none;
+      outline: none;
+      border-radius: 999px;
+      padding: 0.22rem 0.6rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      cursor: pointer;
+      font-size: 0.68rem;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .play-btn {
+      background: linear-gradient(to right, #22c55e, #22c55e);
+      color: #020817;
+      font-weight: 600;
+      box-shadow: 0 0 14px rgba(34, 197, 94, 0.35);
+    }
+
+    .play-btn:hover {
+      box-shadow: 0 0 22px rgba(34, 197, 94, 0.5);
+      transform: translateY(-0.5px);
+    }
+
+    .secondary-btn {
+      background: rgba(17, 24, 39, 0.95);
+      color: #9ca3af;
+      border: 1px solid rgba(75, 85, 99, 0.9);
+    }
+
+    .secondary-btn:hover {
+      color: #e5e7eb;
+      border-color: rgba(148, 163, 253, 0.75);
+      box-shadow: 0 0 14px rgba(15, 23, 42, 0.8);
+    }
+
+    .toggle-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.16rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(75, 85, 99, 0.85);
+      cursor: pointer;
+      font-size: 0.65rem;
+      color: #9ca3af;
+      transition: all 0.16s linear;
+      user-select: none;
+    }
+
+    .toggle-pill.active {
+      background: radial-gradient(circle at top left, rgba(45, 212, 191, 0.26), rgba(15, 23, 42, 1));
+      border-color: rgba(45, 212, 191, 0.95);
+      color: #e5e7eb;
+      box-shadow: 0 0 16px rgba(45, 212, 191, 0.55);
+    }
+
+    .key-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      font-size: 0.55rem;
+      border-radius: 3px;
+      border: 1px solid rgba(156, 163, 175, 0.9);
+      color: #9ca3af;
+      margin-right: 0.18rem;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.35rem;
+      margin-top: 0.1rem;
+    }
+
+    .info-card {
+      padding: 0.28rem 0.4rem;
+      border-radius: 0.6rem;
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(75, 85, 99, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 0.04rem;
+    }
+
+    .info-label {
+      font-size: 0.57rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #6b7280;
+    }
+
+    .info-value {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #e5e7eb;
+    }
+
+    .info-sub {
+      font-size: 0.55rem;
+      color: #6b7280;
+    }
+
+    .slider-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: 0.6rem;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(15, 23, 42, 0.9);
+    }
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      color: #d1fae5;
+    }
+
+    .slider-label-main {
+      font-weight: 500;
+    }
+
+    .slider-label-sub {
+      font-size: 0.55rem;
+      color: #bbf7d0;
+    }
+
+    .slider-value {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #f9fafb;
+      font-family: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.94);
+      outline: none;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 253, 0.12);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #5eead4, #22c55e);
+      box-shadow:
+        0 0 0 2px rgba(17, 24, 39, 1),
+        0 0 14px rgba(16, 185, 129, 0.5);
+      transition: all 0.18s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      box-shadow:
+        0 0 0 2px rgba(15, 23, 42, 1),
+        0 0 22px rgba(22, 163, 74, 0.8);
+      transform: scale(1.06);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      border: none;
+      background: radial-gradient(circle, #5eead4, #22c55e);
+      box-shadow:
+        0 0 0 2px rgba(17, 24, 39, 1),
+        0 0 14px rgba(16, 185, 129, 0.5);
+      transition: all 0.18s ease;
+    }
+
+    .equations-block {
+      margin-top: 0.15rem;
+      padding: 0.35rem 0.55rem;
+      border-radius: 0.7rem;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(15, 23, 42, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+      font-size: 0.65rem;
+      color: #d1fae5;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.9);
+    }
+
+    .equations-block strong {
+      color: #bbf7d0;
+      font-weight: 600;
+    }
+
+    .equations-block code {
+      font-family: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.63rem;
+      padding: 0.02rem 0.22rem;
+      border-radius: 0.28rem;
+      background: rgba(15, 23, 42, 0.9);
+      color: #22c55e;
+    }
+
+    .step-highlight {
+      padding: 0.22rem 0.3rem;
+      border-radius: 0.4rem;
+      background: rgba(22, 163, 74, 0.08);
+      border-left: 2px solid rgba(22, 163, 74, 0.9);
+    }
+
+    .snapshot-highlight {
+      color: #38bdf8;
+      font-weight: 500;
+    }
+
+    .history-highlight {
+      color: #ebd8fc;
+      font-weight: 500;
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        overflow-y: auto;
+      }
+      .layout-root {
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+        padding-bottom: 2rem;
+      }
+      .teal-panel {
+        width: 100%;
+        max-width: 900px;
+        height: auto;
+        max-height: 320px;
+      }
+      .sim-container {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="layout-root">
+  <!-- LEFT: Teal Concept + Controls Panel -->
+  <aside class="teal-panel">
+    <div class="glow-orb"></div>
+
+    <div class="flex items-center justify-between gap-2">
+      <div>
+        <div class="panel-label-pill">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          PHYS1100 · Ch 16
+        </div>
+        <h1 class="mt-1 text-xl font-semibold text-slate-50 leading-tight">
+          Reading Wave Graphs
+        </h1>
+        <p class="text-xs text-teal-100/90 leading-snug mt-1">
+          Connect a travelling sinusoidal wave with its
+          <span class="snapshot-highlight">snapshot (y vs x)</span> and
+          <span class="history-highlight">history (y vs t)</span> graphs. Adjust λ and T and see
+          how the wave speed v = λ / T emerges visually.
+        </p>
+      </div>
+      <div class="text-[0.6rem] text-teal-50/80 text-right leading-tight">
+        
+      </div>
+    </div>
+
+    <!-- Key Physics Values -->
+    <div class="info-grid" style="margin-top: 0.25rem;">
+      <div class="info-card">
+        <div class="info-label">Snapshot</div>
+        <div class="info-value">
+          λ = <span id="lambda-display">0.60</span> m
+        </div>
+        <div class="info-sub">From crest-to-crest spacing in y vs x</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">History</div>
+        <div class="info-value">
+          T = <span id="period-display">0.20</span> s
+        </div>
+        <div class="info-sub">From crest-to-crest timing in y vs t</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Wave Speed</div>
+        <div class="info-value">
+          v = <span id="speed-display">3.00</span> m/s
+        </div>
+        <div class="info-sub">Using v = λ / T</div>
+      </div>
+    </div>
+
+    <!-- Sliders -->
+    <div class="slider-block">
+      <div class="slider-label-row">
+        <div>
+          <div class="slider-label-main">Amplitude A</div>
+          <div class="slider-label-sub">Height of oscillation</div>
+        </div>
+        <div class="slider-value" id="amp-value">0.05 m</div>
+      </div>
+      <input id="amp-slider" type="range" min="0.02" max="0.15" step="0.01" value="0.05" />
+    </div>
+
+    <div class="slider-block">
+      <div class="slider-label-row">
+        <div>
+          <div class="slider-label-main">Wavelength λ</div>
+          <div class="slider-label-sub snapshot-highlight">From snapshot graph</div>
+        </div>
+        <div class="slider-value" id="lambda-value">0.60 m</div>
+      </div>
+      <input id="lambda-slider" type="range" min="0.30" max="1.20" step="0.05" value="0.60" />
+    </div>
+
+    <div class="slider-block">
+      <div class="slider-label-row">
+        <div>
+          <div class="slider-label-main">Period T</div>
+          <div class="slider-label-sub history-highlight">From history graph</div>
+        </div>
+        <div class="slider-value" id="period-value">0.20 s</div>
+      </div>
+      <input id="period-slider" type="range" min="0.10" max="0.80" step="0.02" value="0.20" />
+    </div>
+
+    <!-- Explanation and Steps -->
+    <div class="equations-block">
+      <div class="text-[0.6rem] uppercase tracking-[0.16em] text-emerald-200/90">
+        How to read these graphs
+      </div>
+      <div class="step-highlight mt-0.5">
+        <span class="font-semibold">1.</span>
+        Use the <span class="snapshot-highlight">snapshot graph</span> (top-right)
+        to measure one full cycle in space:
+        <code>λ</code>.
+      </div>
+      <div class="step-highlight mt-0.3">
+        <span class="font-semibold">2.</span>
+        Use the <span class="history-highlight">history graph</span> (bottom-right)
+        at a fixed x to measure one full oscillation in time:
+        <code>T</code>.
+      </div>
+      <div class="step-highlight mt-0.3">
+        <span class="font-semibold">3.</span>
+        Compute the speed:
+        <code>v = λ / T</code>.
+        This is the slope of the line connecting a crest's position vs time.
+      </div>
+      <div class="mt-0.3">
+        With λ = 0.60 m and T = 0.20 s (given in the problem),
+        <code>v = 0.60 / 0.20 = 3.0 m/s</code>.
+      </div>
+    </div>
+
+    <!-- Keyboard hint -->
+    <div class="mt-1.5 text-[0.6rem] text-teal-50/90 flex flex-wrap gap-1 items-center">
+      <span class="opacity-80">Controls:</span>
+      <span><span class="key-pill">P</span>Play/Pause</span>
+      <span><span class="key-pill">R</span>Reset</span>
+      <span><span class="key-pill">S</span>Select Crest</span>
+    </div>
+  </aside>
+
+  <!-- RIGHT: Visualization & Graphs -->
+  <section class="sim-container">
+    <div class="sim-header">
+      <div class="sim-header-left">
+        <div class="sim-title">Travelling Wave + Snapshot + History Graphs</div>
+        <div class="sim-subtitle">
+          Pause the wave to see that the snapshot is a freeze-frame in space.
+          Click a point on the string to trace its motion in the history graph.
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-[0.68rem]">
+        <div class="flex items-center">
+          <div class="legend-dot" style="background:#38bdf8;"></div>
+          <span>Snapshot y(x)</span>
+        </div>
+        <div class="flex items-center">
+          <div class="legend-dot" style="background:#a855f7;"></div>
+          <span>History y(t)</span>
+        </div>
+        <div class="flex items-center">
+          <div class="legend-dot" style="background:#22c55e;"></div>
+          <span>Animated Wave</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-shell">
+      <div class="canvas-toolbar">
+        <div class="toolbar-left">
+          <button id="play-toggle" class="play-btn">
+            <span id="play-icon">▶</span>
+            <span id="play-label">Play Wave</span>
+          </button>
+          <button id="reset-btn" class="secondary-btn">
+            ⟳ Reset to Given Problem
+          </button>
+          <label id="crest-follow-toggle" class="toggle-pill">
+            <span class="legend-dot" style="background:#22c55e;"></span>
+            Crest tracer
+          </label>
+        </div>
+        <div class="toolbar-right">
+          <span class="text-[0.65rem] text-slate-500">
+            Click on the main string:
+            <span class="text-slate-300 font-medium">track point</span> for history graph.
+          </span>
+        </div>
+      </div>
+
+      <!-- p5 Canvas host -->
+      <div id="p5-root" style="display:flex; justify-content:center; align-items:center;"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // Core idea:
+  // - Use a single travelling wave: y(x,t) = A sin(2π(x/λ - t/T)).
+  // - Top region: animated wave on a string (space).
+  // - Middle: snapshot graph y vs x at a specific t_snap.
+  // - Bottom: history graph y vs t for a chosen x_point.
+  // - Sliders for A, λ, T update all views, show v = λ/T.
+  // - User interactions:
+  //    * Play/Pause (button + 'P')
+  //    * Reset (button + 'R') to (A, λ, T) = (0.05, 0.6, 0.2)
+  //    * Click on wave to set tracking x for history graph
+  //    * Optional: crest-follow mode to emphasize v = λ/T
+
+  const sketch = (p) => {
+    // Layout sizes within 800x600 logical canvas
+    const CANVAS_W = 800;
+    const CANVAS_H = 600;
+
+    // Regions:
+    //  - Animated wave: top 40% (with waterline / string)
+    //  - Snapshot graph: middle 25%
+    //  - History graph: bottom 25%
+    const waveRegion = { x: 40, y: 40, w: CANVAS_W - 80, h: 200 };
+    const snapRegion = { x: 40, y: 260, w: CANVAS_W - 80, h: 120 };
+    const histRegion = { x: 40, y: 410, w: CANVAS_W - 80, h: 140 };
+
+    // Parameters (SI-ish)
+    let A = 0.05; // meters
+    let lambda = 0.6; // meters
+    let T = 0.2; // seconds
+    let v = lambda / T;
+
+    // Internal rendering scaling:
+    const xMax = 2.4; // spatial domain (m) for snapshot/animation
+    const tMax = 0.8; // time window (s) for history
+
+    // Animation state
+    let running = false;
+    let crestTracer = false;
+    let tSim = 0;
+
+    // History tracking
+    let trackedX = 0.3; // starting tracked position (m)
+    const historySamples = [];
+    const maxHistorySamples = 400;
+
+    // DOM references
+    let ampSlider, lambdaSlider, periodSlider;
+    let ampValueSpan, lambdaValueSpan, periodValueSpan;
+    let lambdaDisplaySpan, periodDisplaySpan, speedDisplaySpan;
+    let playToggleBtn, playIconSpan, playLabelSpan;
+    let resetBtn, crestToggleLabel;
+
+    p.setup = () => {
+      const canvas = p.createCanvas(CANVAS_W, CANVAS_H);
+      canvas.parent("p5-root");
+      p.frameRate(60);
+      p.noCursor();
+
+      // Bind DOM
+      ampSlider = p.select("#amp-slider");
+      lambdaSlider = p.select("#lambda-slider");
+      periodSlider = p.select("#period-slider");
+
+      ampValueSpan = p.select("#amp-value");
+      lambdaValueSpan = p.select("#lambda-value");
+      periodValueSpan = p.select("#period-value");
+
+      lambdaDisplaySpan = p.select("#lambda-display");
+      periodDisplaySpan = p.select("#period-display");
+      speedDisplaySpan = p.select("#speed-display");
+
+      playToggleBtn = p.select("#play-toggle");
+      playIconSpan = p.select("#play-icon");
+      playLabelSpan = p.select("#play-label");
+      resetBtn = p.select("#reset-btn");
+      crestToggleLabel = p.select("#crest-follow-toggle");
+
+      // Events: sliders
+      ampSlider.input(onParamsChange);
+      lambdaSlider.input(onParamsChange);
+      periodSlider.input(onParamsChange);
+
+      // Buttons
+      playToggleBtn.mousePressed(togglePlay);
+      resetBtn.mousePressed(resetToDefault);
+      crestToggleLabel.mousePressed(toggleCrestTracer);
+
+      // Init text and parameters
+      syncFromSliders();
+      resetHistory();
+    };
+
+    function onParamsChange() {
+      syncFromSliders();
+      resetHistory();
+    }
+
+    function syncFromSliders() {
+      A = parseFloat(ampSlider.value());
+      lambda = parseFloat(lambdaSlider.value());
+      T = parseFloat(periodSlider.value());
+      v = lambda / T;
+
+      ampValueSpan.html(A.toFixed(2) + " m");
+      lambdaValueSpan.html(lambda.toFixed(2) + " m");
+      periodValueSpan.html(T.toFixed(2) + " s");
+
+      lambdaDisplaySpan.html(lambda.toFixed(2));
+      periodDisplaySpan.html(T.toFixed(2));
+      speedDisplaySpan.html(v.toFixed(2));
+
+      // Keep trackedX inside the domain
+      trackedX = p.constrain(trackedX, 0, xMax);
+    }
+
+    function resetToDefault() {
+      ampSlider.value(0.05);
+      lambdaSlider.value(0.6);
+      periodSlider.value(0.2);
+      crestTracer = false;
+      crestToggleLabel.removeClass("active");
+      running = false;
+      updatePlayButton();
+      tSim = 0;
+      syncFromSliders();
+      resetHistory();
+    }
+
+    function togglePlay() {
+      running = !running;
+      updatePlayButton();
+    }
+
+    function updatePlayButton() {
+      if (running) {
+        playIconSpan.html("⏸");
+        playLabelSpan.html("Pause Wave");
+      } else {
+        playIconSpan.html("▶");
+        playLabelSpan.html("Play Wave");
+      }
+    }
+
+    function toggleCrestTracer() {
+      crestTracer = !crestTracer;
+      if (crestTracer) {
+        crestToggleLabel.addClass("active");
+      } else {
+        crestToggleLabel.removeClass("active");
+      }
+    }
+
+    function resetHistory() {
+      historySamples.length = 0;
+      // Seed with initial line
+      for (let i = 0; i < maxHistorySamples; i++) {
+        historySamples.push({ t: -tMax + (i / maxHistorySamples) * tMax, y: 0 });
+      }
+    }
+
+    // Map: physical x [0, xMax] to pixels in a region
+    function xToPix(x, region) {
+      return region.x + (x / xMax) * region.w;
+    }
+
+    // Map: physical displacement y [-A, +A] to pixels in region
+    function yToPix(y, region) {
+      const yMid = region.y + region.h / 2;
+      const scale = (region.h * 0.35) / Math.max(A, 0.02);
+      return yMid - y * scale;
+    }
+
+    // Map: time t [0, tMax] to pixels for history graph (scroll-like)
+    function tToPix(t, region) {
+      return region.x + ((t + tMax) / (2 * tMax)) * region.w;
+    }
+
+    // Travelling wave function
+    function waveY(x, t) {
+      const k = (2 * Math.PI) / lambda;
+      const omega = (2 * Math.PI) / T;
+      return A * Math.sin(k * x - omega * t); // Right-going
+    }
+
+    p.draw = () => {
+      // Background gradient
+      p.clear();
+      p.background(3, 7, 18, 240);
+
+      const dt = 1 / 60;
+
+      if (running) {
+        tSim += dt;
+
+        // Add new history sample for tracked point
+        const yVal = waveY(trackedX, tSim);
+        historySamples.push({ t: tSim, y: yVal });
+        if (historySamples.length > maxHistorySamples) {
+          historySamples.shift();
+        }
+      }
+
+      // Draw subregions
+      drawWaveRegion();
+      drawSnapshotRegion();
+      drawHistoryRegion();
+      drawMouseHints();
+    };
+
+    function drawWaveRegion() {
+      // Frame and baseline
+      p.push();
+      p.stroke(31, 41, 55);
+      p.strokeWeight(1.2);
+      p.noFill();
+      p.rect(waveRegion.x - 10, waveRegion.y - 18, waveRegion.w + 20, waveRegion.h + 26, 14);
+
+      // Title
+      p.noStroke();
+      p.fill(148, 163, 253);
+      p.textAlign(p.LEFT, p.CENTER);
+      p.textSize(11);
+      p.text("Animated travelling wave: y(x, t)", waveRegion.x - 2, waveRegion.y - 8);
+
+      // Baseline string
+      const baselineY = waveRegion.y + waveRegion.h * 0.55;
+      p.stroke(75, 85, 99);
+      p.strokeWeight(1.4);
+      p.line(waveRegion.x, baselineY, waveRegion.x + waveRegion.w, baselineY);
+
+      // Wave curve
+      p.noFill();
+      const gradColor = p.lerpColor(p.color("#22c55e"), p.color("#38bdf8"), 0.35);
+      p.stroke(gradColor);
+      p.strokeWeight(2.2);
+      p.beginShape();
+      const samples = 260;
+      for (let i = 0; i <= samples; i++) {
+        const x = (i / samples) * xMax;
+        const y = waveY(x, tSim);
+        const px = xToPix(x, waveRegion);
+        const py = baselineY - y * (waveRegion.h * 0.55) / Math.max(A, 0.02);
+        p.vertex(px, py);
+      }
+      p.endShape();
+
+      // Highlight a crest tracer if enabled
+      if (crestTracer) {
+        const crestPhase = (tSim * (2 * Math.PI / T)) % (2 * Math.PI);
+        const crestX = (crestPhase / ((2 * Math.PI) / lambda)); // approx crest aligned to phase
+        const xC = crestX % xMax;
+        const yC = waveY(xC, tSim);
+        const px = xToPix(xC, waveRegion);
+        const py = baselineY - yC * (waveRegion.h * 0.55) / Math.max(A, 0.02);
+
+        // Crest marker
+        p.noStroke();
+        p.fill(34, 197, 94);
+        p.circle(px, py, 10);
+
+        // Velocity arrow & label
+        const px2 = px + (v * 0.4) * (waveRegion.w / xMax);
+        p.stroke(34, 197, 94);
+        p.strokeWeight(1.6);
+        p.line(px, py - 16, px2, py - 16);
+        p.noStroke();
+        p.triangle(px2, py - 16, px2 - 6, py - 19, px2 - 6, py - 13);
+        p.fill(163, 230, 53);
+        p.textSize(9);
+        p.textAlign(p.LEFT, p.BOTTOM);
+        p.text("Crest moves → at v = λ / T", px + 4, py - 22);
+      }
+
+      // Tracked point marker on string
+      const trackedPx = xToPix(trackedX, waveRegion);
+      const trackedPy = baselineY - waveY(trackedX, tSim) * (waveRegion.h * 0.55) / Math.max(A, 0.02);
+      p.noStroke();
+      p.fill("#a855f7");
+      p.circle(trackedPx, trackedPy, 8);
+      p.textSize(9);
+      p.fill(148, 163, 253);
+      p.textAlign(p.CENTER, p.TOP);
+      p.text("Tracked point", trackedPx, trackedPy + 6);
+
+      p.pop();
+    }
+
+    function drawSnapshotRegion() {
+      p.push();
+      // Border
+      p.stroke(24, 35, 54);
+      p.strokeWeight(1.1);
+      p.noFill();
+      p.rect(snapRegion.x - 8, snapRegion.y - 18, snapRegion.w + 16, snapRegion.h + 24, 14);
+
+      // Title
+      p.noStroke();
+      p.fill(56, 189, 248);
+      p.textAlign(p.LEFT, p.CENTER);
+      p.textSize(10);
+      p.text("Snapshot graph: y(x) at a frozen instant", snapRegion.x - 2, snapRegion.y - 8);
+
+      // Axes
+      const midY = snapRegion.y + snapRegion.h / 2;
+      p.stroke(55, 65, 81);
+      p.strokeWeight(1);
+      // x-axis
+      p.line(snapRegion.x, midY, snapRegion.x + snapRegion.w, midY);
+      // y-axis
+      p.line(snapRegion.x, snapRegion.y + 8, snapRegion.x, snapRegion.y + snapRegion.h - 4);
+
+      // λ marker between crests near center (for visual)
+      const crest1x_m = lambda * 0.5; // arbitrary crest position
+      const crest2x_m = crest1x_m + lambda;
+      const crest1x_p = xToPix(crest1x_m, snapRegion);
+      const crest2x_p = xToPix(crest2x_m, snapRegion);
+      const crestY = snapRegion.y + 14;
+      p.stroke(56, 189, 248);
+      p.strokeWeight(1.2);
+      p.line(crest1x_p, crestY, crest2x_p, crestY);
+      p.line(crest1x_p, crestY - 4, crest1x_p, crestY + 4);
+      p.line(crest2x_p, crestY - 4, crest2x_p, crestY + 4);
+      p.noStroke();
+      p.fill(56, 189, 248);
+      p.textAlign(p.CENTER, p.TOP);
+      p.text("λ", (crest1x_p + crest2x_p) / 2, crestY + 1);
+
+      // Snapshot curve at t_snap = fixed (use current tSim to show connection)
+      const tSnap = tSim;
+      p.noFill();
+      p.stroke("#38bdf8");
+      p.strokeWeight(1.8);
+      p.beginShape();
+      const samples = 200;
+      for (let i = 0; i <= samples; i++) {
+        const x = (i / samples) * xMax;
+        const y = waveY(x, tSnap);
+        const px = xToPix(x, snapRegion);
+        const py = yToPix(y, snapRegion);
+        p.vertex(px, py);
+      }
+      p.endShape();
+
+      p.pop();
+    }
+
+    function drawHistoryRegion() {
+      p.push();
+
+      // Border
+      p.stroke(24, 35, 54);
+      p.strokeWeight(1.1);
+      p.noFill();
+      p.rect(histRegion.x - 8, histRegion.y - 18, histRegion.w + 16, histRegion.h + 24, 14);
+
+      // Title
+      p.noStroke();
+      p.fill(168, 85, 247);
+      p.textAlign(p.LEFT, p.CENTER);
+      p.textSize(10);
+      p.text(
+        "History graph: y(t) at x = " + trackedX.toFixed(2) + " m",
+        histRegion.x - 2,
+        histRegion.y - 8
+      );
+
+      // Axes
+      const midY = histRegion.y + histRegion.h / 2;
+      p.stroke(55, 65, 81);
+      p.strokeWeight(1);
+      // time axis
+      p.line(histRegion.x, midY, histRegion.x + histRegion.w, midY);
+      // y axis
+      p.line(histRegion.x, histRegion.y + 8, histRegion.x, histRegion.y + histRegion.h - 4);
+
+      // Period markers
+      if (T > 0) {
+        const latestT = historySamples.length ? historySamples[historySamples.length - 1].t : 0;
+        const startT = latestT - tMax;
+        const endT = latestT;
+        const cycles = Math.floor((endT - startT) / T);
+        if (cycles >= 1) {
+          const base = endT - cycles * T;
+          const t1 = base;
+          const t2 = base + T;
+          if (t1 >= startT) {
+            const x1 = tToPix(t1 - endT + tMax, histRegion);
+            const x2 = tToPix(t2 - endT + tMax, histRegion);
+            const yMark = histRegion.y + 14;
+            p.stroke(168, 85, 247);
+            p.strokeWeight(1.2);
+            p.line(x1, yMark, x2, yMark);
+            p.line(x1, yMark - 4, x1, yMark + 4);
+            p.line(x2, yMark - 4, x2, yMark + 4);
+            p.noStroke();
+            p.fill(168, 85, 247);
+            p.textAlign(p.CENTER, p.TOP);
+            p.text("T", (x1 + x2) / 2, yMark + 1);
+          }
+        }
+      }
+
+      // History curve (scrolling in time)
+      if (historySamples.length > 1) {
+        const latestT = historySamples[historySamples.length - 1].t;
+        p.noFill();
+        p.stroke("#a855f7");
+        p.strokeWeight(1.6);
+        p.beginShape();
+        for (let i = 0; i < historySamples.length; i++) {
+          const sample = historySamples[i];
+          const relT = sample.t - (latestT - tMax); // map last tMax interval
+          const xPix = histRegion.x + (relT / tMax) * histRegion.w;
+          const yPix = yToPix(sample.y, histRegion);
+          if (xPix >= histRegion.x && xPix <= histRegion.x + histRegion.w) {
+            p.vertex(xPix, yPix);
+          }
+        }
+        p.endShape();
+      }
+
+      p.pop();
+    }
+
+    function drawMouseHints() {
+      // Hover highlight on wave region to suggest click-to-track
+      const mx = p.mouseX;
+      const my = p.mouseY;
+      if (
+        mx > waveRegion.x &&
+        mx < waveRegion.x + waveRegion.w &&
+        my > waveRegion.y &&
+        my < waveRegion.y + waveRegion.h
+      ) {
+        p.push();
+        const alpha = 40;
+        p.noStroke();
+        p.fill(148, 163, 253, alpha);
+        p.circle(mx, my, 10);
+        p.pop();
+      }
+    }
+
+    p.mousePressed = () => {
+      const mx = p.mouseX;
+      const my = p.mouseY;
+
+      // If click inside wave region: set trackedX based on x position
+      if (
+        mx > waveRegion.x &&
+        mx < waveRegion.x + waveRegion.w &&
+        my > waveRegion.y &&
+        my < waveRegion.y + waveRegion.h
+      ) {
+        const xRel = (mx - waveRegion.x) / waveRegion.w;
+        trackedX = p.constrain(xRel * xMax, 0, xMax);
+        resetHistory();
+        // Immediately record a new sample for continuity
+        const yVal = waveY(trackedX, tSim);
+        historySamples.push({ t: tSim, y: yVal });
+      }
+    };
+
+    p.keyPressed = () => {
+      if (p.key === "p" || p.key === "P") {
+        togglePlay();
+      } else if (p.key === "r" || p.key === "R") {
+        resetToDefault();
+      } else if (p.key === "s" || p.key === "S") {
+        // Toggle crest tracer quickly (or use to lock tracked point; here: crest tracer)
+        toggleCrestTracer();
+      }
+    };
+  };
+
+  new p5(sketch);
+</script>
+</body>
+</html>

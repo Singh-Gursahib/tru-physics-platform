@@ -132,6 +132,24 @@ export const courses: Course[] = [
               "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-6.1-6.2-6.5-Circular-Motion-and-Gravitation/Simulations/centripetal-acceleration-cases.html",
             tags: ["circular-motion", "centripetal-acceleration", "velocity-effects", "radius-effects", "parametric-analysis"],
           },
+          {
+            id: "banked-curve-safe-speeds",
+            title: "Banked Curve with Friction: Safe Speeds & FBD",
+            description:
+              "Interactive visualization of a car on a frictional banked curve. Adjust bank angle β, static friction μₛ, radius R, and car speed v. A circular track view plus live FBD show mg, N, and friction while computing v_min and v_max for impending up/down slip; the car drifts inward or outward when v is outside the safe band.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-6.1-6.2-6.5-Circular-Motion-and-Gravitation/Simulations/banked-curve-safe-speeds.html",
+            tags: [
+              "circular-motion",
+              "banked-curve",
+              "friction",
+              "safe-speed-range",
+              "free-body-diagram",
+              "centripetal-force",
+              "p5.js",
+              "interactive-visualization",
+            ],
+          },
         ],
       },
       {
@@ -174,6 +192,83 @@ export const courses: Course[] = [
             filePath:
               "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-7-Work-and-Energy/Simulations/power-comparison.html",
             tags: ["power", "work", "energy", "rate-of-work", "efficiency", "comparative-analysis", "student-climbing"],
+          },
+        ],
+      },
+      {
+        id: "oscillatory-motion-waves",
+        name: "Ch 16: Oscillatory Motion and Waves",
+        description:
+          "Explore sinusoidal waves, snapshot and history graphs, and how wavelength and period determine wave speed.",
+        simulations: [
+          {
+            id: "reading-wave-graphs",
+            title: "Reading Wave Graphs: Snapshot vs History",
+            description:
+              "Interactively explore a travelling sinusoidal wave together with its snapshot (y vs x) and history (y vs t) graphs. Adjust amplitude, wavelength, and period, click to track a point on the string, and visualize how v = λ / T emerges from the graphs.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-16-Oscillatory-Motion-and-Waves/Simulations/reading-wave-graphs.html",
+            tags: [
+              "waves",
+              "oscillations",
+              "snapshot-graph",
+              "history-graph",
+              "wave-speed",
+              "p5.js",
+              "interactive-visualization",
+            ],
+          },
+          {
+            id: "mass-spring-oscillator-period",
+            title: "Mass-Spring Oscillator Period: Skydivers",
+            description:
+              "Visualize a skydiver hanging from a springy parachute and see how adding a second skydiver changes the oscillation period. The simulation computes k from the initial period and mass, then updates the motion using T = 2π√(m/k), providing a clear, light-themed demonstration that T ∝ √m.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-16-Oscillatory-Motion-and-Waves/Simulations/mass-spring-oscillator-period.html",
+            tags: [
+              "oscillations",
+              "mass-spring",
+              "period",
+              "T=2π√(m/k)",
+              "wave-motion",
+              "p5.js",
+              "interactive-visualization",
+            ],
+          },
+          {
+            id: "superposition-of-waves",
+            title: "Superposition of Waves",
+            description:
+              "Explore the principle of superposition using two time-dependent wave graphs stacked above their resultant. Drag a vertical scrubber to any time t to read y₁(t), y₂(t), and see the dynamically computed sum y₁(t) + y₂(t). At t = 5 s, the simulation highlights y₁ ≈ -3, y₂ ≈ -4, and their resultant ≈ -7, matching the problem statement from Slide 19.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-16-Oscillatory-Motion-and-Waves/Simulations/superposition-of-waves.html",
+            tags: [
+              "waves",
+              "superposition",
+              "interference",
+              "resultant-wave",
+              "time-graphs",
+              "p5.js",
+              "interactive-visualization",
+            ],
+          },
+          {
+            id: "standing-waves-on-string",
+            title: "Standing Waves on a String",
+            description:
+              "Interactive visualization of harmonics on a string fixed at both ends. Select mode number m (1–5) to see the corresponding standing wave pattern y(x,t) = A sin(mπx/L) cos(ωt), with clearly marked nodes and antinodes. The data panel updates λₘ = 2L/m and fₘ = m·f₁ in real time, matching the slide treatment of allowed standing-wave modes.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-16-Oscillatory-Motion-and-Waves/Simulations/standing-waves-on-string.html",
+            tags: [
+              "standing-waves",
+              "harmonics",
+              "string-fixed-ends",
+              "nodes",
+              "antinodes",
+              "wavelength",
+              "frequency",
+              "p5.js",
+            ],
           },
         ],
       },
@@ -244,6 +339,31 @@ export const courses: Course[] = [
             filePath:
               "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-8-Linear-Momentum-and-Collisions/Simulations/collision-2d.html",
             tags: ["2d-collision", "conservation-of-momentum", "momentum-vectors", "elastic-collision", "kinetic-energy"],
+          },
+        ],
+      },
+      {
+        id: "oscillatory-motion-waves",
+        name: "Ch 16: Oscillatory Motion and Waves",
+        description:
+          "Explore sinusoidal waves, snapshot and history graphs, and how wavelength and period determine wave speed.",
+        simulations: [
+          {
+            id: "reading-wave-graphs",
+            title: "Reading Wave Graphs: Snapshot vs History",
+            description:
+              "Interactively explore a travelling sinusoidal wave together with its snapshot (y vs x) and history (y vs t) graphs. Adjust amplitude, wavelength, and period, click to track a point on the string, and visualize how v = λ / T emerges from the graphs.",
+            filePath:
+              "/Data/Courses/PHYS-1100-Fundamentals-of-Physics-1/Topics/Ch-16-Oscillatory-Motion-and-Waves/Simulations/reading-wave-graphs.html",
+            tags: [
+              "waves",
+              "oscillations",
+              "snapshot-graph",
+              "history-graph",
+              "wave-speed",
+              "p5.js",
+              "interactive-visualization",
+            ],
           },
         ],
       },

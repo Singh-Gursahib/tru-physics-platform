@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PHYS1100 | Mass-Spring Oscillator Period: Skydivers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <!-- Tailwind CSS via CDN (for utility + consistent look) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --teal-main: #0f766e;
+      --teal-soft: #14b8a6;
+      --teal-bg: #e0f7f5;
+      --slate-soft: #6b7280;
+      --slate-deep: #111827;
+      --accent-soft: #f97316;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, -sans-serif;
+      background:
+        radial-gradient(circle at top left, #f5fbff 0, #e0f7f5 24%, #f9fafb 65%, #eff6ff 100%);
+      color: #0f172a;
+      overflow: hidden;
+    }
+
+    .layout-root {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: stretch;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Left: Teal light-themed sidebar */
+    .teal-panel {
+      width: 340px;
+      max-width: 360px;
+      background:
+        radial-gradient(circle at top left, rgba(45, 212, 191, 0.18), transparent 65%),
+        linear-gradient(
+          180deg,
+          rgba(224, 247, 245, 1),
+          rgba(214, 243, 239, 1),
+          rgba(191, 232, 228, 1)
+        );
+      border-radius: 1.2rem;
+      padding: 1.1rem 1.2rem 0.9rem;
+      box-shadow:
+        0 16px 35px rgba(15, 23, 42, 0.16),
+        0 0 24px rgba(13, 148, 136, 0.09);
+      border: 1px solid rgba(148, 163, 253, 0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .teal-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    .teal-panel::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 253, 0.5);
+      border-radius: 999px;
+    }
+
+    .panel-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 118, 110, 0.22);
+      background: rgba(240, 253, 250, 0.95);
+      font-size: 0.63rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #0f766e;
+    }
+
+    .panel-pill span.dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.9);
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #064e3b;
+      letter-spacing: 0.01em;
+      margin-top: 0.1rem;
+    }
+
+    .panel-subtitle {
+      font-size: 0.74rem;
+      color: #065f46;
+      line-height: 1.35;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.35rem;
+      margin-top: 0.2rem;
+    }
+
+    .info-card {
+      padding: 0.35rem 0.45rem;
+      border-radius: 0.65rem;
+      background: rgba(240, 253, 250, 0.98);
+      border: 1px solid rgba(148, 163, 253, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 0.06rem;
+      box-shadow: 0 5px 10px rgba(15, 23, 42, 0.03);
+    }
+
+    .info-label {
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #6b7280;
+    }
+
+    .info-value {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .info-sub {
+      font-size: 0.6rem;
+      color: #9ca3af;
+    }
+
+    .formula-block {
+      margin-top: 0.12rem;
+      padding: 0.4rem 0.5rem;
+      border-radius: 0.7rem;
+      background: rgba(240, 253, 250, 0.98);
+      border: 1px solid rgba(148, 163, 253, 0.24);
+      display: flex;
+      flex-direction: column;
+      gap: 0.18rem;
+      font-size: 0.65rem;
+      color: #065f46;
+      box-shadow: 0 5px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .formula-block code {
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas;
+      font-size: 0.63rem;
+      padding: 0.04rem 0.22rem;
+      border-radius: 0.25rem;
+      background: rgba(226, 232, 240, 0.9);
+      color: #0f766e;
+    }
+
+    .step-pill {
+      padding: 0.16rem 0.36rem;
+      border-radius: 999px;
+      background: rgba(22, 163, 74, 0.06);
+      border: 1px solid rgba(22, 163, 74, 0.2);
+      font-size: 0.58rem;
+      color: #166534;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.18rem;
+    }
+
+    .slider-block {
+      margin-top: 0.12rem;
+      padding: 0.35rem 0.45rem 0.25rem;
+      border-radius: 0.7rem;
+      background: rgba(240, 253, 250, 0.98);
+      border: 1px solid rgba(148, 163, 253, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.35rem;
+    }
+
+    .slider-label-main {
+      font-size: 0.7rem;
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    .slider-label-sub {
+      font-size: 0.58rem;
+      color: #6b7280;
+    }
+
+    .slider-value {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #0f766e;
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(229, 231, 235, 1);
+      outline: none;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 253, 0.18);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #14b8a6, #0f766e);
+      box-shadow:
+        0 0 0 2px #ecfeff,
+        0 2px 8px rgba(15, 23, 42, 0.22);
+      transition: all 0.18s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.06) translateY(-0.5px);
+      box-shadow:
+        0 0 0 2px #e0f2fe,
+        0 4px 14px rgba(15, 23, 42, 0.32);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #14b8a6, #0f766e);
+      border: none;
+      box-shadow:
+        0 0 0 2px #ecfeff,
+        0 2px 8px rgba(15, 23, 42, 0.22);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 0.35rem;
+      margin-top: 0.28rem;
+      flex-wrap: wrap;
+    }
+
+    .primary-btn,
+    .ghost-btn,
+    .outline-pill {
+      border-radius: 999px;
+      font-size: 0.67rem;
+      padding: 0.22rem 0.7rem;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .primary-btn {
+      background: linear-gradient(to right, #14b8a6, #0f766e);
+      color: #ecfeff;
+      box-shadow: 0 4px 14px rgba(15, 118, 110, 0.35);
+      font-weight: 600;
+    }
+
+    .primary-btn:hover {
+      box-shadow: 0 6px 18px rgba(15, 118, 110, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .ghost-btn {
+      background: rgba(236, 253, 245, 0.9);
+      color: #0f766e;
+      border: 1px solid rgba(45, 212, 191, 0.6);
+      font-weight: 500;
+    }
+
+    .ghost-btn:hover {
+      background: #ecfeff;
+      box-shadow: 0 3px 9px rgba(148, 163, 253, 0.35);
+    }
+
+    .outline-pill {
+      background: transparent;
+      color: #6b7280;
+      border: 1px dashed rgba(148, 163, 253, 0.8);
+    }
+
+    .outline-pill span.key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(148, 163, 253, 0.7);
+      font-size: 0.55rem;
+      color: #4b5563;
+    }
+
+    /* Right: Simulation container (light, carded) */
+    .sim-container {
+      flex: 1;
+      min-width: 820px;
+      max-width: 1120px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .sim-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.08rem;
+    }
+
+    .sim-title {
+      font-size: 1.02rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .sim-subtitle {
+      font-size: 0.74rem;
+      color: #6b7280;
+    }
+
+    .sim-legend {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.66rem;
+      color: #6b7280;
+      flex-wrap: wrap;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      margin-right: 0.2rem;
+    }
+
+    .canvas-shell {
+      background:
+        radial-gradient(circle at top, #eff6ff, #ffffff 60%);
+      border-radius: 1.1rem;
+      padding: 0.75rem 0.9rem 0.7rem;
+      box-shadow:
+        0 14px 30px rgba(148, 163, 253, 0.16),
+        0 0 22px rgba(148, 163, 253, 0.12);
+      border: 1px solid rgba(148, 163, 253, 0.26);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .canvas-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.65rem;
+      color: #6b7280;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .toggle-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0.14rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 253, 0.7);
+      font-size: 0.6rem;
+      color: #6b7280;
+      cursor: pointer;
+      background: rgba(249, 250, 251, 0.96);
+      transition: all 0.16s ease;
+    }
+
+    .toggle-pill.active {
+      background: rgba(224, 242, 254, 1);
+      color: #0f172a;
+      border-color: #0f766e;
+      box-shadow: 0 2px 8px rgba(148, 163, 253, 0.32);
+    }
+
+    #p5-root {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        overflow-y: auto;
+      }
+      .layout-root {
+        flex-direction: column;
+        height: auto;
+      }
+      .teal-panel {
+        width: 100%;
+        max-width: 900px;
+        max-height: 360px;
+      }
+      .sim-container {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="layout-root">
+  <!-- LEFT: Light Teal Sidebar -->
+  <aside class="teal-panel">
+    <div class="panel-pill">
+      <span class="dot"></span>
+      PHYS1100 · Ch 16 · Mass-Spring
+    </div>
+    <div class="panel-title">Mass-Spring Oscillator Period</div>
+    <div class="panel-subtitle">
+      Visualize how the oscillation period
+      <strong>T</strong> depends on the mass
+      <strong>m</strong> through
+      <strong>T = 2π√(m/k)</strong>.
+      Start with one skydiver, then add a second and watch the period increase.
+    </div>
+
+    <!-- Given / Computed Values -->
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-label">Given</div>
+        <div class="info-value">
+          m₁ = <span id="mass1-label">90.0</span> kg
+        </div>
+        <div class="info-sub">Single skydiver</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Given</div>
+        <div class="info-value">
+          T₁ = <span id="T1-label">1.50</span> s
+        </div>
+        <div class="info-sub">Measured period</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Derived spring</div>
+        <div class="info-value">
+          k = <span id="k-label">1579</span> N/m
+        </div>
+        <div class="info-sub">From T₁ and m₁</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">After adding</div>
+        <div class="info-value">
+          m₂ = <span id="mass2-label">60.0</span> kg
+        </div>
+        <div class="info-sub">Second skydiver</div>
+      </div>
+    </div>
+
+    <!-- Formulae and Steps -->
+    <div class="formula-block">
+      <div class="step-pill">
+        <span>1</span>
+        Use period formula
+      </div>
+      <div>
+        For a mass-spring system:
+        <code>T = 2π√(m/k)</code>
+      </div>
+      <div>
+        With one skydiver (mass m₁, period T₁):
+        <code>k = 4π²m₁ / T₁²</code>
+      </div>
+      <div class="step-pill" style="margin-top:0.12rem;">
+        <span>2</span>
+        Add second skydiver
+      </div>
+      <div>
+        Total mass:
+        <code>m_total = m₁ + m₂</code>
+      </div>
+      <div>
+        New period:
+        <code>T₂ = 2π√(m_total / k)</code>
+      </div>
+      <div class="step-pill" style="margin-top:0.12rem;">
+        <span>3</span>
+        Compare
+      </div>
+      <div>
+        Since T ∝ √m,
+        <code>T₂ / T₁ = √(m_total / m₁)</code>.
+      </div>
+      <div>
+        For m₁ = 90 kg, m₂ = 60 kg:
+        <code>T₂ ≈ 1.94 s</code>.
+      </div>
+    </div>
+
+    <!-- Parameter Controls (optional exploration) -->
+    <div class="slider-block">
+      <div class="slider-header">
+        <div>
+          <div class="slider-label-main">Adjust m₁ (for exploration)</div>
+          <div class="slider-label-sub">Keeps T₁ fixed to recompute k</div>
+        </div>
+        <div class="slider-value" id="m1-slider-label">90.0 kg</div>
+      </div>
+      <input id="m1-slider" type="range" min="40" max="140" step="2" value="90" />
+    </div>
+
+    <div class="slider-block">
+      <div class="slider-header">
+        <div>
+          <div class="slider-label-main">Adjust m₂ (added mass)</div>
+          <div class="slider-label-sub">Total m = m₁ + m₂</div>
+        </div>
+        <div class="slider-value" id="m2-slider-label">60.0 kg</div>
+      </div>
+      <input id="m2-slider" type="range" min="20" max="100" step="2" value="60" />
+    </div>
+
+    <!-- Actions and Key Hints -->
+    <div class="btn-row">
+      <button id="toggle-play" class="primary-btn">
+        <span id="play-icon">▶</span>
+        <span id="play-label">Play Oscillation</span>
+      </button>
+      <button id="add-skydiver-btn" class="ghost-btn">
+        + Add Skydiver (use m₂)
+      </button>
+    </div>
+    <div class="btn-row">
+      <button id="reset-btn" class="ghost-btn">
+        ⟳ Reset to Problem Values
+      </button>
+      <div class="outline-pill">
+        <span class="key">Space</span>
+        Pause/Play
+      </div>
+      <div class="outline-pill">
+        <span class="key">A</span>
+        Toggle added skydiver
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT: Main Simulation -->
+  <section class="sim-container">
+    <div class="sim-header">
+      <div class="sim-title-block">
+        <div class="sim-title">Skydivers on a Springy Parachute: Period vs Mass</div>
+        <div class="sim-subtitle">
+          The animation uses T = 2π√(m/k). First, it solves for k using the 90 kg skydiver and T₁ = 1.50 s,
+          then shows how adding another skydiver changes the period.
+        </div>
+      </div>
+      <div class="sim-legend">
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:#0f766e;"></span> Spring / straps
+        </span>
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:#22c55e;"></span> Single-skydiver motion
+        </span>
+        <span class="flex items-center">
+          <span class="legend-dot" style="background:#f97316;"></span> Two-skydiver motion
+        </span>
+      </div>
+    </div>
+
+    <div class="canvas-shell">
+      <div class="canvas-toolbar">
+        <div class="toolbar-left">
+          <div id="mode-pill" class="toggle-pill active">
+            <span class="legend-dot" style="background:#22c55e;"></span>
+            Mode: 1 Skydiver (m = <span id="mode-mass-label">90.0</span> kg)
+          </div>
+          <div class="toggle-pill" id="auto-focus-pill">
+            Auto-sync timer to current T
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <span>
+            T₁ (current) =
+            <strong><span id="T1-live-label">1.50</span> s</strong>
+          </span>
+          <span>
+            T₂ (predicted) =
+            <strong><span id="T2-live-label">1.94</span> s</strong>
+          </span>
+          <span>
+            Period Timer:
+            <strong><span id="timer-label">0.00</span> s</strong>
+          </span>
+        </div>
+      </div>
+      <div id="p5-root"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // p5.js sketch implementing:
+  // - Single mass-spring oscillator with skydiver character.
+  // - Calculation of k from (m1, T1).
+  // - Add second skydiver -> m_total -> new T2.
+  // - Smooth transitions of period, large digital timer, and clear light-themed visuals.
+
+  const sketch = (p) => {
+    const CANVAS_W = 800;
+    const CANVAS_H = 520;
+
+    // Physics constants and state
+    let m1 = 90.0;          // initial mass
+    let T1 = 1.5;           // initial period (fixed reference for computing k)
+    let m2 = 60.0;          // added mass
+    let added = false;      // whether second skydiver is attached
+    let autoSyncTimer = false;
+
+    // Derived quantities
+    let k;                  // spring constant from (m1, T1)
+    let mEffective;         // current mass
+    let Tcurrent;           // current period
+    let omega;              // angular frequency
+
+    // Oscillation state
+    const equilibriumY = 170; // anchor "equilibrium" vertical reference for mass center
+    const amplitude = 40;     // px amplitude of bouncing visualization
+    let tSim = 0;
+    let running = false;
+
+    // Timer for period visualization
+    let tCycle = 0;
+    let lastSign = 1;
+
+    // DOM elements
+    let mass1Label, T1Label, kLabel, mass2Label;
+    let m1Slider, m2Slider, m1SliderLabel, m2SliderLabel;
+    let togglePlayBtn, playIconSpan, playLabelSpan;
+    let addSkydiverBtn, resetBtn;
+    let modePill, modeMassLabel, autoFocusPill;
+    let T1LiveLabel, T2LiveLabel, timerLabel;
+
+    p.setup = () => {
+      const canvas = p.createCanvas(CANVAS_W, CANVAS_H);
+      canvas.parent("p5-root");
+      p.frameRate(60);
+
+      // Grab DOM refs
+      mass1Label = p.select("#mass1-label");
+      T1Label = p.select("#T1-label");
+      kLabel = p.select("#k-label");
+      mass2Label = p.select("#mass2-label");
+
+      m1Slider = p.select("#m1-slider");
+      m2Slider = p.select("#m2-slider");
+      m1SliderLabel = p.select("#m1-slider-label");
+      m2SliderLabel = p.select("#m2-slider-label");
+
+      togglePlayBtn = p.select("#toggle-play");
+      playIconSpan = p.select("#play-icon");
+      playLabelSpan = p.select("#play-label");
+      addSkydiverBtn = p.select("#add-skydiver-btn");
+      resetBtn = p.select("#reset-btn");
+
+      modePill = p.select("#mode-pill");
+      modeMassLabel = p.select("#mode-mass-label");
+      autoFocusPill = p.select("#auto-focus-pill");
+
+      T1LiveLabel = p.select("#T1-live-label");
+      T2LiveLabel = p.select("#T2-live-label");
+      timerLabel = p.select("#timer-label");
+
+      // Bind events
+      m1Slider.input(onMassSliderChange);
+      m2Slider.input(onMassSliderChange);
+
+      togglePlayBtn.mousePressed(togglePlay);
+      addSkydiverBtn.mousePressed(toggleAdded);
+      resetBtn.mousePressed(resetToProblem);
+      autoFocusPill.mousePressed(toggleAutoSync);
+
+      // Initial compute
+      resetToProblem();
+    };
+
+    function computeKFrom(m, T) {
+      return (4 * Math.PI * Math.PI * m) / (T * T);
+    }
+
+    function updateDerived() {
+      // k from fixed T1 and current m1 slider (so students can explore)
+      k = computeKFrom(m1, T1);
+
+      // Update textual k (rounded)
+      kLabel.html(k.toFixed(0));
+
+      // Current effective mass
+      mEffective = added ? (m1 + m2) : m1;
+
+      // Current period using same k
+      Tcurrent = 2 * Math.PI * Math.sqrt(mEffective / k);
+      omega = (2 * Math.PI) / Tcurrent;
+
+      // Labels
+      mass1Label.html(m1.toFixed(1));
+      T1Label.html(T1.toFixed(2));
+      mass2Label.html(m2.toFixed(1));
+
+      modeMassLabel.html(mEffective.toFixed(1));
+
+      T1LiveLabel.html(T1.toFixed(2));
+      const T2_pred = 2 * Math.PI * Math.sqrt((m1 + m2) / k);
+      T2LiveLabel.html(T2_pred.toFixed(2));
+
+      // Slider display
+      m1SliderLabel.html(m1.toFixed(1) + " kg");
+      m2SliderLabel.html(m2.toFixed(1) + " kg");
+
+      // Mode pill styling
+      if (added) {
+        modePill.removeClass("active");
+        modePill.addClass("active");
+        modePill.html(
+          '<span class="legend-dot" style="background:#f97316;"></span>' +
+          'Mode: 2 Skydivers (m = ' + mEffective.toFixed(1) + ' kg)'
+        );
+      } else {
+        modePill.removeClass("active");
+        modePill.addClass("active");
+        modePill.html(
+          '<span class="legend-dot" style="background:#22c55e;"></span>' +
+          'Mode: 1 Skydiver (m = ' + mEffective.toFixed(1) + ' kg)'
+        );
+      }
+    }
+
+    function onMassSliderChange() {
+      m1 = parseFloat(m1Slider.value());
+      m2 = parseFloat(m2Slider.value());
+      updateDerived();
+      if (autoSyncTimer) {
+        // Reset timer alignment
+        tSim = 0;
+        tCycle = 0;
+      }
+    }
+
+    function togglePlay() {
+      running = !running;
+      updatePlayButton();
+    }
+
+    function updatePlayButton() {
+      if (running) {
+        playIconSpan.html("⏸");
+        playLabelSpan.html("Pause Oscillation");
+      } else {
+        playIconSpan.html("▶");
+        playLabelSpan.html("Play Oscillation");
+      }
+    }
+
+    function toggleAdded() {
+      added = !added;
+      updateDerived();
+    }
+
+    function resetToProblem() {
+      // Reset to original problem values
+      m1 = 90.0;
+      m2 = 60.0;
+      added = false;
+      m1Slider.value(m1);
+      m2Slider.value(m2);
+      running = false;
+      autoSyncTimer = false;
+      autoFocusPill.removeClass("active");
+      tSim = 0;
+      tCycle = 0;
+      lastSign = 1;
+      updatePlayButton();
+      updateDerived();
+    }
+
+    function toggleAutoSync() {
+      autoSyncTimer = !autoSyncTimer;
+      if (autoSyncTimer) {
+        autoFocusPill.addClass("active");
+        tSim = 0;
+        tCycle = 0;
+      } else {
+        autoFocusPill.removeClass("active");
+      }
+    }
+
+    function updateTimer(dt) {
+      // Measure full cycles based on sign of velocity or zero crossing of displacement.
+      // Here: we approximate by tracking sign of displacement derivative.
+      const y = Math.sin(omega * tCycle);
+      const v_sign = Math.cos(omega * tCycle) >= 0 ? 1 : -1;
+      if (v_sign !== lastSign && v_sign === 1) {
+        // Completed full cycle (crest-to-crest)
+        if (autoSyncTimer) {
+          tCycle = 0;
+        }
+      }
+      lastSign = v_sign;
+      tCycle += dt;
+
+      timerLabel.html(tCycle.toFixed(2));
+    }
+
+    p.draw = () => {
+      p.clear();
+      p.background(0, 0, 0, 0);
+
+      const dt = 1 / 60;
+      if (running) {
+        tSim += dt;
+        updateTimer(dt);
+      }
+
+      drawScene();
+      drawHUD();
+    };
+
+    function getMassPositionY() {
+      // Simple harmonic motion around equilibrium
+      const yOffset = amplitude * Math.sin(omega * tSim);
+      return equilibriumY + yOffset;
+    }
+
+    function drawScene() {
+      const anchorX = CANVAS_W / 2;
+      const anchorY = 40;
+
+      // Soft sky background
+      const gradTop = p.color(239, 246, 255);
+      const gradBottom = p.color(224, 247, 245);
+      for (let y = 0; y < CANVAS_H; y++) {
+        const t = y / CANVAS_H;
+        const c = p.lerpColor(gradTop, gradBottom, t);
+        p.stroke(c);
+        p.line(0, y, CANVAS_W, y);
+      }
+
+      // Cloud-like shapes
+      p.noStroke();
+      p.fill(255, 255, 255, 200);
+      p.ellipse(110, 70, 90, 36);
+      p.ellipse(160, 78, 70, 26);
+      p.ellipse(650, 60, 110, 40);
+      p.ellipse(710, 70, 90, 32);
+
+      // Parachute canopy
+      p.push();
+      p.translate(anchorX, anchorY + 10);
+      p.fill(20, 184, 166, 240);
+      p.stroke(15, 118, 110);
+      p.strokeWeight(1.4);
+      const canopyW = 120;
+      const canopyH = 38;
+      p.arc(0, 0, canopyW, canopyH * 2, p.PI, 0, p.CHORD);
+
+      // Straps
+      p.stroke(148, 163, 253, 220);
+      p.strokeWeight(1.1);
+      const strapYTop = 10;
+      p.line(-canopyW / 3, strapYTop, -18, 65);
+      p.line(-canopyW / 6, strapYTop, -6, 65);
+      p.line(canopyW / 6, strapYTop, 6, 65);
+      p.line(canopyW / 3, strapYTop, 18, 65);
+
+      p.pop();
+
+      // Springy cord from canopy bottom to skydiver harness (stylized)
+      const massY = getMassPositionY();
+      const springTopY = anchorY + 60;
+      const coils = 14;
+      const springAmp = 14;
+      p.noFill();
+      p.stroke(148, 163, 253);
+      p.strokeWeight(1.5);
+      p.beginShape();
+      for (let i = 0; i <= coils; i++) {
+        const t = i / coils;
+        const x = anchorX + (i % 2 === 0 ? -springAmp : springAmp);
+        const y = p.lerp(springTopY, massY - 45, t);
+        p.vertex(x, y);
+      }
+      p.endShape();
+
+      // Draw primary skydiver
+      drawSkydiver(anchorX, massY - (added ? 32 : 0), "#22c55e");
+
+      // If added, draw second skydiver hanging from legs
+      if (added) {
+        drawSkydiver(anchorX, massY + 40, "#f97316", true);
+      }
+
+      // Shadow/ground hint (very subtle)
+      p.noStroke();
+      p.fill(15, 23, 42, 10);
+      p.ellipse(anchorX, CANVAS_H - 35, 140, 18);
+    }
+
+    function drawSkydiver(x, y, colorHex, isSecond = false) {
+      p.push();
+      p.translate(x, y);
+
+      const bodyH = 40;
+      const bodyW = 18;
+
+      // Rope connection / harness
+      if (!isSecond) {
+        p.stroke(148, 163, 253, 200);
+        p.strokeWeight(1.2);
+        p.line(0, -bodyH / 2 - 12, 0, -bodyH / 2);
+      }
+
+      // Body
+      p.rectMode(p.CENTER);
+      p.stroke(31, 41, 55, 220);
+      p.strokeWeight(1.2);
+      p.fill(colorHex);
+      p.rect(0, 0, bodyW, bodyH, 6);
+
+      // Head
+      p.noStroke();
+      p.fill(254, 240, 194);
+      p.ellipse(0, -bodyH / 2 - 9, 16, 16);
+
+      // Simple visor
+      p.fill(129, 140, 248, 230);
+      p.rect(0, -bodyH / 2 - 8, 12, 5, 3);
+
+      // Arms
+      p.stroke(249, 250, 251);
+      p.strokeWeight(2);
+      p.line(-bodyW / 2, -6, -bodyW, 4);
+      p.line(bodyW / 2, -6, bodyW, 4);
+
+      // Legs
+      p.stroke(15, 23, 42);
+      if (!isSecond) {
+        // Slightly bent legs
+        p.line(-bodyW / 4, bodyH / 2, -bodyW / 2, bodyH / 2 + 10);
+        p.line(bodyW / 4, bodyH / 2, bodyW / 2, bodyH / 2 + 10);
+      } else {
+        // Attached legs
+        p.line(-bodyW / 4, bodyH / 2, -bodyW / 4, bodyH / 2 + 12);
+        p.line(bodyW / 4, bodyH / 2, bodyW / 4, bodyH / 2 + 12);
+      }
+
+      p.pop();
+    }
+
+    function drawHUD() {
+      // Bottom info band: show current m, k, T
+      const bandY = CANVAS_H - 52;
+      p.noStroke();
+      p.fill(255, 255, 255, 230);
+      p.rect(24, bandY, CANVAS_W - 48, 40, 14);
+
+      const marginX = 36;
+      let x = marginX;
+      const baseline = bandY + 23;
+
+      p.textAlign(p.LEFT, p.CENTER);
+      p.textSize(10);
+
+      // Current status
+      const labelColor = p.color(148, 163, 253);
+      const valueColor = p.color(15, 118, 110);
+
+      p.fill(labelColor);
+      p.text("Effective mass", x, baseline - 10);
+      p.fill(valueColor);
+      p.text(mEffective.toFixed(1) + " kg", x, baseline + 2);
+      x += 130;
+
+      p.fill(labelColor);
+      p.text("Spring constant k", x, baseline - 10);
+      p.fill(valueColor);
+      p.text(k.toFixed(0) + " N/m", x, baseline + 2);
+      x += 150;
+
+      p.fill(labelColor);
+      p.text("Current period T", x, baseline - 10);
+      p.fill(valueColor);
+      p.text(Tcurrent.toFixed(2) + " s", x, baseline + 2);
+      x += 130;
+
+      p.fill(labelColor);
+      p.text("Timer (one oscillation)", x, baseline - 10);
+      p.fill(valueColor);
+      // timerLabel is updated separately; here we draw an icon
+      p.text("see top-right", x, baseline + 2);
+    }
+
+    p.keyPressed = () => {
+      if (p.key === " " || p.key === "Spacebar") {
+        togglePlay();
+      } else if (p.key === "a" || p.key === "A") {
+        toggleAdded();
+      } else if (p.key === "r" || p.key === "R") {
+        resetToProblem();
+      }
+    };
+  };
+
+  new p5(sketch);
+</script>
+</body>
+</html>
